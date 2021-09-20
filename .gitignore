@@ -1,3 +1,10 @@
+.bash_history
+.gdb_history
+.viminfo
+.config/*
+index.html
+.bashrc
+
 #Binary Files
 *.bin
 *.sys
@@ -6,6 +13,7 @@
 *.img
 *.qcow2
 *.vmdk
+*.elf
 
 #Object files
 *.o
