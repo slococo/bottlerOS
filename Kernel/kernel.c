@@ -7,6 +7,7 @@
 #include "keyboard.h"
 #include "time.h"
 #include "pcb.h"
+#include "memManager.h"
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -19,9 +20,9 @@ static const uint64_t PageSize = 0x1000;
 
 static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
+static void * const memoryModuleAddress = (void*)0x600000;
 
 typedef int (*EntryPoint)();
-
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
@@ -49,10 +50,34 @@ void * initializeKernelBinary() {
 
 void load_idt();
 uint64_t getRSP();
+void printBottlerAndWait();
 
 int main() {
 	load_idt();
 
+	if (initMemoryManager(memoryModuleAddress, memoryModuleAddress + sizeof(void *)) == -1) {
+    	printStringLen(13, "createMemoryManager() -- ERROR", 31); 
+		new_line();
+		return EXIT_FAILURE;
+	}
+
+	#ifndef BUDDY
+	// SACAR DESPUÉS! ES SOLO PARA TESTEO... CORRER DE A UNO!
+	if (testOne() == EXIT_FAILURE)
+		return EXIT_FAILURE;
+	// if (testTwo() == EXIT_FAILURE)
+		// return EXIT_FAILURE;
+	#endif
+	
+	saveSampleRSP(getRSP());
+
+	printBottlerAndWait();
+
+	((EntryPoint)sampleCodeModuleAddress)();
+	return EXIT_SUCCESS;
+}
+
+void printBottlerAndWait() {
 	printStringLen(4, "                                                                             ", 80); new_line();
     printStringLen(4, "                                   (%(                                     ", 80); new_line();
 	printStringLen(15, "      Welcome to", 17);
@@ -90,9 +115,4 @@ int main() {
 	wait(3);
 	
 	clear();
-
-	saveSampleRSP(getRSP());
-
-	((EntryPoint)sampleCodeModuleAddress)();
-	return 0;
 }

@@ -4,6 +4,7 @@
 .config/*
 index.html
 .bashrc
+.vscode/*
 
 #Binary Files
 *.bin
