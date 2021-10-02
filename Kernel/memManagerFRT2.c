@@ -1,24 +1,9 @@
-/*
- * A sample implementation of pvPortMalloc() and vPortFree() that permits
- * allocated blocks to be freed, but does not combine adjacent free blocks
- * into a single larger block (and so will fragment memory).  See heap_4.c for
- * an equivalent that does combine adjacent blocks into single larger blocks.
- *
- * See heap_1.c, heap_3.c and heap_4.c for alternative implementations, and the
- * memory management pages of http://www.FreeRTOS.org for more information.
- */
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
 
-/* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
-all the API functions to use the MPU wrappers.  That should only be done when
-task.h is included from an application file. */
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
-
-// #include "FreeRTOS.h"
-// #include "task.h"
 
 #define portCHAR		char
 #define portFLOAT		float
@@ -32,7 +17,6 @@ typedef portSTACK_TYPE StackType_t;
 typedef long BaseType_t;
 typedef unsigned long UBaseType_t;
 
-/* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
 #define configTOTAL_HEAP_SIZE                   1024
@@ -43,38 +27,27 @@ typedef unsigned long UBaseType_t;
 #define pdTRUE			( ( BaseType_t ) 1 )
 #define portPOINTER_SIZE_TYPE uint32_t
 
-/*
-#ifndef configHEAP_ALLOCATION_SCHEME
-#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
-	#warning The configHEAP_ALLOCATION_SCHEME is not defined in FreeRTOSConfig
-#endif
-#else
-#if(configHEAP_ALLOCATION_SCHEME == HEAP_ALLOCATION_TYPE2)
-
-#undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
-
-#if( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
-	#error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
-#endif
-*/
-
 /* A few bytes might be lost to byte aligning the heap start address. */
 #define configADJUSTED_HEAP_SIZE	( configTOTAL_HEAP_SIZE - portBYTE_ALIGNMENT )
 
 /*
  * Initialises the heap structures before their first use.
  */
-static void prvHeapInit( void );
+static void prvHeapInit(void);
 
 /* Allocate the memory for the heap. */
-#if( configAPPLICATION_ALLOCATED_HEAP == 1 )
-	/* The application writer has already defined the array used for the RTOS
-	heap - probably so it can be placed in a special segment or address. */
-	extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
-#else
-	static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
-#endif /* configAPPLICATION_ALLOCATED_HEAP */
+// #if( configAPPLICATION_ALLOCATED_HEAP == 1 )
+// 	/* The application writer has already defined the array used for the RTOS
+// 	heap - probably so it can be placed in a special segment or address. */
+// 	extern uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+// #else
+// 	static uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+// #endif /* configAPPLICATION_ALLOCATED_HEAP */
 
+static uint8_t *ucHeap;
+void initMemoryManager(void * managedMemory) {
+	ucHeap = managedMemory;
+}
 
 /* Define the linked list structure.  This is used to link free blocks in order
 of their size. */

@@ -22,7 +22,11 @@ typedef struct meta {
 	unsigned char size : 6;		// ______00 - n where (2^n)-1 is the block size
 } Meta;
 
-static char myblock[MANAGED_MEMORY_SIZE];
+// static char myblock[MANAGED_MEMORY_SIZE];
+static char *myblock;
+void initMemoryManager(void * managedMemory) {
+	myblock = managedMemory;
+}
 
 void unpack(Meta * m, int pos);
 
