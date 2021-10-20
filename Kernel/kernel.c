@@ -54,8 +54,13 @@ void printBottlerAndWait();
 
 #include "test_util.h"
 
+#ifdef BUDDY
+#define MAX_BLOCKS 128
+#define MAX_MEMORY 800
+#else
 #define MAX_BLOCKS 42//1024/24 //128
 #define MAX_MEMORY 352//1024-42x16 //Should be around 80% of memory managed by the MM
+#endif
 
 typedef struct MM_rq{
   void *address;
@@ -67,9 +72,9 @@ void test_mm(){
   uint8_t rq;
   uint32_t total;
 
-	// int i = 6;
-//   while (i-- != 0){
-  while (1){
+	int i = 1000;
+  while (i-- != 0){
+//   while (1){
     rq = 0;
     total = 0;
 
@@ -124,8 +129,8 @@ void test_mm(){
 	// 	ncPrint("libre dps de free: ");
 	// ncPrintDec(xPortGetFreeHeapSize());
 	// 		ncNewline();
-	// 	ncPrint("termine un loop regio");
-	// 		ncNewline();
+		ncPrint("termine un loop regio");
+			ncNewline();
 
 	// if (i == 5)
 	// wait(3);
@@ -152,14 +157,14 @@ int main() {
 	// 	return EXIT_FAILURE;
 	// if (testTwo() == EXIT_FAILURE)
 		// return EXIT_FAILURE;
-		test_mm();
 	#endif
+		// test_mm();
 	
 	saveSampleRSP(getRSP());
 
-	// printBottlerAndWait();
+	printBottlerAndWait();
 
-	// ((EntryPoint)sampleCodeModuleAddress)();
+	((EntryPoint)sampleCodeModuleAddress)();
 	return EXIT_SUCCESS;
 }
 

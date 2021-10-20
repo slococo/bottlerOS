@@ -1,6 +1,24 @@
-GLOBAL getCharInterrupt, getTimeGen, getMemGen, getRegs, getRSP
+GLOBAL getCharInterrupt, getTimeGen, getMemGen, getRegs, getRSP, forceTimer, enter_region, leave_region
 
 section .text
+
+forceTimer:
+	int 20h
+
+	ret
+
+; tiene que ser uint32_t el parametro, no soporta más xchg. aunq también podría ser menos
+enter_region:
+	;push eax no haría falta pues lo podemos perder...
+	mov eax, 1
+	xchg eax, [rdi]
+	cmp eax, 0
+	jne enter_region
+	ret
+
+leave_region:
+	mov dword [rdi], 0
+	ret
 
 getCharInterrupt:
 	push rbp
