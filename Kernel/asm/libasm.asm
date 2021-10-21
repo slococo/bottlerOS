@@ -4,7 +4,6 @@ section .text
 
 forceTimer:
 	int 20h
-
 	ret
 
 ; tiene que ser uint32_t el parametro, no soporta más xchg. aunq también podría ser menos

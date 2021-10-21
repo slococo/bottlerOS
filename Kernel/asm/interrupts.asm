@@ -207,23 +207,23 @@ haltcpu:
 %endmacro
 
 _initialize_stack_frame:
-    mov rcx, rsp
+    mov r10, rsp
     mov rsp, rsi
     
 	push 0x0 ; ss
     push rsi ; sp
     push 0x202 ; rflags
-	; 0x200 IF FLAG
-	; 0x002 always one
     push 0x08 ; cs -- offset de la GDT
     push rdi ; IP
+	push rdx
+	push rcx
 
     pushState
 	mov rdi, rsp
 	call newStack
     
 	mov rax, rsp
-    mov rsp, rcx
+    mov rsp, r10
     ret
 
 ; System calls (int 80h)

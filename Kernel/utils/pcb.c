@@ -5,7 +5,9 @@ static const long stackSize = 0x4000000; // 2^26
 static const uint8_t * lastProcessAddress = (uint8_t *) 0x10000001; // 2^29 - 1
 
 int activeProcesses = 0, currentProcess = -1;
-uint64_t processes[MAX_PROCESSES];
+uint64_t priority0[MAX_PROCESSES];
+uint64_t priority1[MAX_PROCESSES];
+uint64_t priority2[MAX_PROCESSES];
 
 void cleanProcesses() {
     activeProcesses = 0;
@@ -18,16 +20,16 @@ void newProcess(void (*fn)) {
 }
 
 void newStack(uint64_t rsp) {
-    processes[activeProcesses++] = rsp;
+    priority0[activeProcesses++] = rsp;
 }
 
 uint64_t preserveStack(uint64_t rsp) {
     if (currentProcess != -1) {
-        processes[currentProcess] = rsp;
+        priority0[currentProcess] = rsp;
     }
     if (++currentProcess >= activeProcesses) currentProcess = 0;
     if (activeProcesses == 0) return 0;
-    return processes[currentProcess];
+    return priority0[currentProcess];
 }
 
 static uint64_t sampleRSP;
