@@ -3,7 +3,7 @@
 
 #include "system.h"
 
-void shell(void);
+void shell(int argc, char *argv[]);
 void printWindow(char * window);
 void addText(char * buffer, char * window, int * offset);
 void incorrect_comm(char * buffer, char * window, int * offset);

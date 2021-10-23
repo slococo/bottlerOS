@@ -28,12 +28,12 @@ void load_idt() {
     setup_IDT_entry (0x06, (uint64_t)&_exception6Handler);
 
     setup_IDT_entry (0x80, (uint64_t)&_systemCallsHandler);
-    setup_IDT_entry (0x81, (uint64_t)&_switchContext);
+    // setup_IDT_entry (0x81, (uint64_t)&_switchContext);
 
 	picMasterMask(0xFC);
 	picSlaveMask(0xFF);
 
-	_sti();
+	// _sti();
 }
 
 static void setup_IDT_entry (int index, uint64_t offset) {

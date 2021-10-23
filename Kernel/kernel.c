@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <string.h>
+// #include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <naiveConsole.h>
@@ -140,7 +140,17 @@ void test_mm(){
 	// new_line();
   } 
 }
+
+void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]);
+void initScheduler();
+
+void _cli();
+void _sti();
+void haltcpu();
+
 int main() {
+	// _cli();
+
 	load_idt();
 
 	// if (initMemoryManager(memoryModuleAddress, memoryModuleAddress + sizeof(void *)) == -1) {
@@ -150,6 +160,7 @@ int main() {
 	// }
 
 	initMemoryManager(memoryModuleAddress);
+	initScheduler();
 
 	#ifndef BUDDY
 	// SACAR DESPUÉS! ES SOLO PARA TESTEO... CORRER DE A UNO!
@@ -159,12 +170,17 @@ int main() {
 		// return EXIT_FAILURE;
 	#endif
 		// test_mm();
-	
+
 	saveSampleRSP(getRSP());
+	
+
+	// ((EntryPoint)sampleCodeModuleAddress)();
+    char * argv[] = {"SampleCode"};
+    enqueueProcess(sampleCodeModuleAddress, 1, 1, argv);
+	// haltcpu();
+	_sti();
 
 	printBottlerAndWait();
-
-	((EntryPoint)sampleCodeModuleAddress)();
 	return EXIT_SUCCESS;
 }
 
@@ -203,7 +219,7 @@ void printBottlerAndWait() {
     printStringLen(13, "                                 %%%%%%%                                    ", 80); new_line();
     printStringLen(13, "                                                                            ", 80); new_line();
 	
-	wait(3);
+	// wait(3);
 	
 	clear();
 }

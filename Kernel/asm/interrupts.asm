@@ -19,9 +19,11 @@ GLOBAL _exception6Handler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN systemCallsDispatcher
-EXTERN preserveStack
-EXTERN newStack
+; EXTERN preserveStack
+; EXTERN newStack
 EXTERN changeWindow
+EXTERN updateRSP
+EXTERN nextProcess
 
 GLOBAL switchContext
 GLOBAL loadProcess
@@ -136,7 +138,26 @@ picSlaveMask:
 
 ;8254 Timer (Timer Tick)
 _irq00Handler:
-	irqHandlerMaster 0
+	pushState
+	fsave [bytesForFPU]
+	fxsave [bytesForSSEAligned]
+
+	mov rdi, 0
+	call irqDispatcher
+
+	mov rdi, rsp
+	call updateRSP
+
+	call nextProcess
+	mov rsp, rax
+
+	mov al, 20h
+	out 20h, al
+
+	fxrstor [bytesForSSEAligned]
+	frstor [bytesForFPU]
+	popState
+	iretq
 
 ;Keyboard
 _irq01Handler:
@@ -208,21 +229,21 @@ haltcpu:
 
 _initialize_stack_frame:
     mov r10, rsp
-    mov rsp, rsi
+    ; mov rsp, rsi
     
 	push 0x0 ; ss
     push rsi ; sp
     push 0x202 ; rflags
     push 0x08 ; cs -- offset de la GDT
     push rdi ; IP
-	push rdx
-	push rcx
+	push rdx ; argc
+	push rcx ; argv
 
     pushState
-	mov rdi, rsp
-	call newStack
+	; mov rdi, rsp
+	; call newStack
     
-	mov rax, rsp
+	; mov rax, rsp
     mov rsp, r10
     ret
 
@@ -240,16 +261,32 @@ _systemCallsHandler:
 	iretq
 
 ; switch Context (int 81h)
-_switchContext:
-	pushState
-	
-	call changeWindow
-	mov rdi, rsp
-	call preserveStack
+;	_switchContext:
+;		pushState
+;		
+;		call changeWindow
+;		mov rdi, rsp
+;		call preserveStack
+;	
+;		mov rsp, rax
+;		popState
+;		pop rsi ; argv
+;		pop rdi ; argc
+;		iretq
 
-	mov rsp, rax
-	popState
-	iretq
+; _switchContext:
+; 	pushState
+	
+; 	mov rdi, rsp
+; 	call updateRSP
+
+; 	call nextProcess
+
+; 	mov rsp, rax
+; 	popState
+; 	pop rsi ; argv
+; 	pop rdi ; argc
+; 	iretq
 
 SECTION .data
 	align 16

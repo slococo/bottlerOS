@@ -10,5 +10,7 @@ void swap(char * x, char * y);
 char * reverse(char * buffer, int i, int j);
 int abs(int value);
 char * itoa(int value, char * buffer, int base, int length);
+void strlen(const char *str, int *len);
+int strcpy(char * strDest, const char * strSrc);
 
 #endif

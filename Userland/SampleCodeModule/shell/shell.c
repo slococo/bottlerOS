@@ -50,9 +50,10 @@ void scanfNoPrint(char * buffer, int maxSize, char * window, int * offset) {
     int i = 0;
     while ((c = getChar()) != '\n' && i < maxSize - 1) {
         if (c != -1) {
-            if (c == '\v')
-                sys_switchContext();
-            else if (c == '\b' && i > 0) {
+            // if (c == '\v')
+            //     sys_switchContext();
+            // else if (c == '\b' && i > 0) {
+            if (c == '\b' && i > 0) {
                 buffer[--i] = ' ';
                 window[--(*offset)] = ' ';
                 printWindow(window);
@@ -79,7 +80,7 @@ void clearWindow(char * window, int * offset) {
     printWindow(window);
 }
 
-void shell() {
+void shell(int argc, char *argv[]) {
     char window[ROWS * COLS + 1] = {[0 ... ROWS * COLS - 1] = ' ', 0};
     int offset = (ROWS - 1) * COLS;
 

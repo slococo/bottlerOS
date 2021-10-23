@@ -83,7 +83,7 @@ static void startOver() {
 	}
 
 	clear();
-	cleanProcesses();
+	// cleanProcesses();
 	moveToWindowVideo(1);
 	//((fn)sampleCodeAddress)();
 }

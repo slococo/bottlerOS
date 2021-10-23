@@ -98,3 +98,15 @@ char * itoa(int value, char * buffer, int base, int length) {
     buffer[i] = '\0';
     return reverse(buffer, 0, i - 1);
 }
+
+void strlen(const char *str, int *len) {
+    for (*len = 0; str[*len]; (*len)++);
+}
+
+int strcpy(char * strDest, const char * strSrc) {
+	int i = 0;
+    while (*strDest++ = *strSrc++) {
+		i++;
+	}
+    return i;
+}
