@@ -24,16 +24,32 @@ processCDT * lastBlocked = NULL;
 int readyLen = 0;
 int blockedLen = 0;
 
-processCDT * currentProcess = NULL;
+static processCDT * currentProcess = NULL;
 int pids = 0;
 
+#include "naiveConsole.h"
+#include "time.h"
 uint64_t nextProcess() {
-    if (currentProcess == NULL)
+    if (currentProcess == NULL) {
+        ncClear();
+        ncPrint("Una cubana para el socio biza");
+        ncPrint(firstReady->name);
+        // ncPrintDec(firstReady->pid);
+        ncPrintHex(firstReady->rsp);
+        ncPrintHex(firstReady->rbp);
+        // wait(4);
+        currentProcess = firstReady;
         return firstReady->rsp;
+    }
     if (currentProcess->executions < MAX_PRIORITY - currentProcess->priority + 1) {
         currentProcess->executions++;
+        ncClear();
+        ncPrint("Hola");
+        // ncPrintDec(firstReady->pid);
+        // wait(4);
         return currentProcess->rsp;
     }
+    ncPrint("Chau");
     currentProcess->executions = 0;
     currentProcess = currentProcess->next;
     return currentProcess->rsp;
@@ -51,29 +67,58 @@ void initScheduler() {
 }
 
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
-    processADT proc = pvPortMalloc(sizeof(processCDT));
-    uint64_t * rbp = pvPortMalloc(STACK_SIZE);
-    uint64_t * rsp = rbp;
+    processADT process = pvPortMalloc(sizeof(processCDT));
+    uint64_t * rbp = STACK_SIZE + pvPortMalloc(STACK_SIZE);
+    uint64_t * rsp = rbp - 20; //22
     
     char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
 
-    newProcess(proc, argv[0], priority, foreground, (uint64_t)rsp, (uint64_t)rbp);
+    // newProcess(process, argv[0], priority, foreground, (uint64_t) rsp, (uint64_t) rbp);
+    // char aux[MAX_NAME_SIZE];
+    char * aux = pvPortMalloc(10);
+    int j;
+    for (j = 0; j < MAX_NAME_SIZE - 1 && argv[0][j] != 0; j++) {
+        aux[j] = argv[0][j];
+    }
+    aux[j] = '\0';
+
+    process->name = aux;
+    process->pid = pids++;
+    process->ppid = currentProcess->pid;
+    process->priority = priority;
+    process->rsp = (uint64_t) rsp;
+    process->rbp = (uint64_t) rbp;
+    process->executions = 0;
+    process->foreground = foreground;
+    process->state = READY;
 
     _initialize_stack_frame(fn, rbp, argc, argv);
 
-    if (firstReady == NULL)
-        firstReady = proc;
+    if (firstReady == NULL) {
+        firstReady = process;
+        lastReady = firstReady;
+    }
     else
-        lastReady->next = proc;
+        lastReady->next = process;
         
+    ncClear();
+    ncPrint(argv[0]);
+    // proc->name = argv[0];
+    ncPrint(process->name);
+    ncPrintDec(process->pid);
+    ncPrintHex(process->rsp);
+    ncPrintHex(process->rbp);
+    // wait(3);
     return;
 }
 
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp) {
     char aux[MAX_NAME_SIZE];
-    for (int j = 0; j < MAX_NAME_SIZE && name[j] != 0; j++) {
+    int j;
+    for (j = 0; j < MAX_NAME_SIZE - 1 && name[j] != 0; j++) {
         aux[j] = name[j];
     }
+    aux[j] = '\0';
 
     process->name = aux;
     process->pid = pids++;
@@ -91,8 +136,8 @@ void newProcess(processADT process, char * name, char priority, char foreground,
 //     exit();
 // }
 
-processCDT * search(processCDT ** previous, int pid, processCDT * first) {
-    processCDT * curr = first;
+processADT search(processADT * previous, int pid, processADT first) {
+    processADT curr = first;
     * previous = NULL;
     while (curr != NULL) {
         if (curr->pid == pid) {
@@ -113,8 +158,8 @@ processCDT * search(processCDT ** previous, int pid, processCDT * first) {
 }
 
 char block(int pid) {
-    processCDT * prev = NULL;
-    processCDT * del = search(&prev, pid, firstReady);
+    processADT prev = NULL;
+    processADT del = search(&prev, pid, firstReady);
     if (del == NULL)
         return EXIT_FAILURE;
     else {
@@ -134,8 +179,8 @@ char block(int pid) {
 }
 
 char unblock(int pid) {
-    processCDT * prev = NULL;
-    processCDT * del = search(&prev, pid, firstBlocked);
+    processADT prev = NULL;
+    processADT del = search(&prev, pid, firstBlocked);
     if (del == NULL)
         return EXIT_FAILURE;
     else {
@@ -152,8 +197,8 @@ char unblock(int pid) {
 }
 
 char kill(int pid) {
-    processCDT * prev = NULL;
-    processCDT * del = search(&prev, pid, firstReady);
+    processADT prev = NULL;
+    processADT del = search(&prev, pid, firstReady);
     if (del == NULL) {
         del = search(&prev, pid, firstBlocked);
         if (del == NULL)
@@ -193,8 +238,12 @@ char nice(char offset) {
 }
 
 void updateRSP(uint64_t newRsp) {
-    if (currentProcess == NULL)
+    if (currentProcess == NULL) {
+        ncClear();
+		ncPrint("ES NULL");
+        // wait(4);
         return;
+    }
     currentProcess->rsp = newRsp;
 }
 

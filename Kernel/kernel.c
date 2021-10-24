@@ -147,6 +147,7 @@ void initScheduler();
 void _cli();
 void _sti();
 void haltcpu();
+void forceTimer();
 
 int main() {
 	// _cli();
@@ -179,8 +180,9 @@ int main() {
     enqueueProcess(sampleCodeModuleAddress, 1, 1, argv);
 	// haltcpu();
 	_sti();
+	// forceTimer();
 
-	printBottlerAndWait();
+	// printBottlerAndWait();
 	return EXIT_SUCCESS;
 }
 

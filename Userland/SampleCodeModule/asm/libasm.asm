@@ -3,6 +3,7 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
+GLOBAL sys_exit
 
 section .text
 
@@ -48,6 +49,21 @@ sys_read:
 	pop rcx
 	pop rdx
 	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_exit:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+
+	mov rdi, 4
+	int 80h
+
 	pop rdi
 
     mov rsp, rbp

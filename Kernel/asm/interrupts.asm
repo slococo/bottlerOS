@@ -139,8 +139,8 @@ picSlaveMask:
 ;8254 Timer (Timer Tick)
 _irq00Handler:
 	pushState
-	fsave [bytesForFPU]
-	fxsave [bytesForSSEAligned]
+	; fsave [bytesForFPU]
+	; fxsave [bytesForSSEAligned]
 
 	mov rdi, 0
 	call irqDispatcher
@@ -154,9 +154,11 @@ _irq00Handler:
 	mov al, 20h
 	out 20h, al
 
-	fxrstor [bytesForSSEAligned]
-	frstor [bytesForFPU]
+	; fxrstor [bytesForSSEAligned]
+	; frstor [bytesForFPU]
 	popState
+	; pop rsi ; argv
+	; pop rdi ; argc 6004d8
 	iretq
 
 ;Keyboard
@@ -229,15 +231,15 @@ haltcpu:
 
 _initialize_stack_frame:
     mov r10, rsp
-    ; mov rsp, rsi
+    mov rsp, rsi
     
 	push 0x0 ; ss
     push rsi ; sp
     push 0x202 ; rflags
     push 0x08 ; cs -- offset de la GDT
     push rdi ; IP
-	push rdx ; argc
-	push rcx ; argv
+	; push rdx ; argc
+	; push rcx ; argv
 
     pushState
 	; mov rdi, rsp
