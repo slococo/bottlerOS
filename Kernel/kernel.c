@@ -178,6 +178,7 @@ int main() {
 	// ((EntryPoint)sampleCodeModuleAddress)();
     char * argv[] = {"SampleCode"};
     enqueueProcess(sampleCodeModuleAddress, 1, 1, argv);
+	clear();
 	// haltcpu();
 	_sti();
 	// forceTimer();

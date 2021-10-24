@@ -11,7 +11,7 @@
 void forceTimer();
 void haltcpu();
 
-#define STACK_SIZE 1024
+#define STACK_SIZE 1024 * 512
 #define MAX_PRIORITY 40 // Maximum number for a priority
 #define MIN_PRIORITY 0 // Minimum number for a priority (yet maximum level of priority) // me gusta
 #define DEF_PRIORITY 0

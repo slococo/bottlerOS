@@ -11,38 +11,38 @@ static int currentY = 0;
 int limitX[2] = {0, 80};
 int limitY[2] = {0, 25};
 
-char windowVideo = 1;
-
-void changeWindow() {
-	windowVideo = 1 - windowVideo;
-	moveToWindowVideo(windowVideo);
-}
-
-void moveToWindowVideo(char window) {
-	if (window == -1) {
-		windowVideo = -1;
-		limitX[0] = 0;
-		limitX[1] = 80;
-		limitY[0] = 0;
-		limitY[1] = 25;
-	}
-	if (window == 1) {
-		windowVideo = 1;
-		limitX[0] = 40;
-		limitX[1] = 80;
-		limitY[0] = 0;
-		limitY[1] = 25;
-	}
-	if (window == 0) {
-		windowVideo = 0;
-		limitX[0] = 0;
-		limitX[1] = 40;
-		limitY[0] = 0;
-		limitY[1] = 25;
-	}
-	currentX = limitX[0];
-	currentY = limitY[0];
-}
+//	char windowVideo = 1;
+//	
+//	void changeWindow() {
+//		windowVideo = 1 - windowVideo;
+//		moveToWindowVideo(windowVideo);
+//	}
+//	
+//	void moveToWindowVideo(char window) {
+//		if (window == -1) {
+//			windowVideo = -1;
+//			limitX[0] = 0;
+//			limitX[1] = 80;
+//			limitY[0] = 0;
+//			limitY[1] = 25;
+//		}
+//		if (window == 1) {
+//			windowVideo = 1;
+//			limitX[0] = 40;
+//			limitX[1] = 80;
+//			limitY[0] = 0;
+//			limitY[1] = 25;
+//		}
+//		if (window == 0) {
+//			windowVideo = 0;
+//			limitX[0] = 0;
+//			limitX[1] = 40;
+//			limitY[0] = 0;
+//			limitY[1] = 25;
+//		}
+//		currentX = limitX[0];
+//		currentY = limitY[0];
+//	}
 
 void increment() {
 	currentX++;

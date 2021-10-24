@@ -22,7 +22,7 @@ typedef unsigned long UBaseType_t;
 
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   1024 * 1024
+#define configTOTAL_HEAP_SIZE                   1024 * 1024 * 100
 #define configAPPLICATION_ALLOCATED_HEAP        0
 #define portBYTE_ALIGNMENT 8
 #define portBYTE_ALIGNMENT_MASK ( 0x0007 ) // 8

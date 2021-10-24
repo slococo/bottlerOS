@@ -31,11 +31,13 @@ int semPost(char semaphore) {}
 // o pasando la estructura de sem. esta es la q hace posix
 sem_t * semOpen(char * name, unsigned int value) {
     enter_region(&semLock);
+    //
     leave_region(&semLock);
 }
 
 int semClose(sem_t * semaphore) {
     enter_region(&semLock);
+    //
     leave_region(&semLock);
 }
 
@@ -60,5 +62,6 @@ int semWait(sem_t * semaphore) {
 
 int semPost(sem_t * semaphore) {
     enter_region(&semLock);
+    //
     leave_region(&semLock);
 }

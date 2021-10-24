@@ -14,7 +14,7 @@
 #define SIZE 100
 #define MAX_ARGS 5
 
-#define COLS 40
+#define COLS 80
 #define ROWS 25
 
 const int len = 8;
@@ -42,7 +42,7 @@ void addText(char * buffer, char * window, int * offset) {
 }
 
 void printWindow(char * window) {
-    printString(window);
+    printStringLen(window, ROWS * COLS);
 }
 
 void scanfNoPrint(char * buffer, int maxSize, char * window, int * offset) {
@@ -80,6 +80,9 @@ void clearWindow(char * window, int * offset) {
     printWindow(window);
 }
 
+// static char window[ROWS * COLS + 1] = {[0 ... ROWS * COLS - 1] = ' ', 0};
+// static char buffer[SIZE] = {0};
+// static char *tokens[SIZE] = {0};
 void shell(int argc, char *argv[]) {
     char window[ROWS * COLS + 1] = {[0 ... ROWS * COLS - 1] = ' ', 0};
     int offset = (ROWS - 1) * COLS;

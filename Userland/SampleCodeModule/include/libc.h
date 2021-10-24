@@ -6,6 +6,7 @@
 void winClear();
 void printString(char * string);
 void printStringError(char * string);
+void printStringLen(char * string, int len);
 void new_line();
 char getChar();
 int abs();

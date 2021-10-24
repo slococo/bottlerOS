@@ -1,4 +1,6 @@
 #include "scheduler.h"
+#define INIT_PID 1
+
 void _initialize_stack_frame(void *, void *, int, char**);
 
 enum states {READY = 0, BLOCKED};
@@ -25,33 +27,46 @@ int readyLen = 0;
 int blockedLen = 0;
 
 static processCDT * currentProcess = NULL;
-int pids = 0;
+static int pids = INIT_PID;
+static char update = 1;
 
 #include "naiveConsole.h"
 #include "time.h"
+
+
 uint64_t nextProcess() {
+    update = 1;
     if (currentProcess == NULL) {
-        ncClear();
-        ncPrint("Una cubana para el socio biza");
-        ncPrint(firstReady->name);
-        // ncPrintDec(firstReady->pid);
-        ncPrintHex(firstReady->rsp);
-        ncPrintHex(firstReady->rbp);
+        // ncClear();
+        // ncPrint("Una cubana para el socio biza");
+        // ncPrint(firstReady->name);
+        // // ncPrintDec(firstReady->pid);
+        // ncPrintHex(firstReady->rsp);
+        // ncPrintHex(firstReady->rbp);
         // wait(4);
+        if (firstReady == NULL)
+            unblock(INIT_PID);
+
         currentProcess = firstReady;
         return firstReady->rsp;
     }
     if (currentProcess->executions < MAX_PRIORITY - currentProcess->priority + 1) {
         currentProcess->executions++;
-        ncClear();
-        ncPrint("Hola");
+        // ncClear();
+        // ncPrint("Hola");
         // ncPrintDec(firstReady->pid);
         // wait(4);
         return currentProcess->rsp;
     }
-    ncPrint("Chau");
+    // ncPrint("Chau");
     currentProcess->executions = 0;
-    currentProcess = currentProcess->next;
+    if (currentProcess->next != NULL)
+        currentProcess = currentProcess->next;
+    else {
+        // ncPrint("Una venezolana para el socio biza");
+        // wait(4);
+        currentProcess = firstReady;
+    }
     return currentProcess->rsp;
 }
 
@@ -67,8 +82,12 @@ void initScheduler() {
 }
 
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
+    if (firstReady != NULL && firstReady->pid == INIT_PID)
+        block(INIT_PID);
+
     processADT process = pvPortMalloc(sizeof(processCDT));
-    uint64_t * rbp = STACK_SIZE + pvPortMalloc(STACK_SIZE);
+    uint64_t * auxi = pvPortMalloc(STACK_SIZE);
+    uint64_t * rbp = STACK_SIZE + auxi;
     uint64_t * rsp = rbp - 20; //22
     
     char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
@@ -94,41 +113,40 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
 
     _initialize_stack_frame(fn, rbp, argc, argv);
 
-    if (firstReady == NULL) {
+    if (firstReady == NULL)
         firstReady = process;
-        lastReady = firstReady;
-    }
-    else
+    else 
         lastReady->next = process;
+    lastReady = process;
         
-    ncClear();
-    ncPrint(argv[0]);
-    // proc->name = argv[0];
-    ncPrint(process->name);
-    ncPrintDec(process->pid);
-    ncPrintHex(process->rsp);
-    ncPrintHex(process->rbp);
+    // ncClear();
+    // ncPrint(argv[0]);
+    // // proc->name = argv[0];
+    // ncPrint(process->name);
+    // ncPrintDec(process->pid);
+    // ncPrintHex(process->rsp);
+    // ncPrintHex(process->rbp);
     // wait(3);
     return;
 }
 
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp) {
-    char aux[MAX_NAME_SIZE];
-    int j;
-    for (j = 0; j < MAX_NAME_SIZE - 1 && name[j] != 0; j++) {
-        aux[j] = name[j];
-    }
-    aux[j] = '\0';
+    // char aux[MAX_NAME_SIZE];
+    // int j;
+    // for (j = 0; j < MAX_NAME_SIZE - 1 && name[j] != 0; j++) {
+    //     aux[j] = name[j];
+    // }
+    // aux[j] = '\0';
 
-    process->name = aux;
-    process->pid = pids++;
-    process->ppid = currentProcess->pid;
-    process->priority = priority;
-    process->rsp = rsp;
-    process->rbp = rbp;
-    process->executions = 0;
-    process->foreground = foreground;
-    process->state = READY;
+    // process->name = aux;
+    // process->pid = pids++;
+    // process->ppid = currentProcess->pid;
+    // process->priority = priority;
+    // process->rsp = rsp;
+    // process->rbp = rbp;
+    // process->executions = 0;
+    // process->foreground = foreground;
+    // process->state = READY;
 }
 
 // void loader(int argc, char * argv[], void (*fn) (int, char **)) {
@@ -169,11 +187,20 @@ char block(int pid) {
             firstReady = del->next;
     }
 
-    lastBlocked->next = del;
+    processCDT * next = del->next;
     del->next = NULL;
+
+    if (lastBlocked != NULL)
+        lastBlocked->next = del;
+    else
+        firstBlocked = del;
     lastBlocked = del;
 
-    forceTimer();
+    if (pid == currentProcess->pid) {
+        update = 0;
+        currentProcess = next;
+        forceTimer();
+    }
 
     return EXIT_SUCCESS; 
 }
@@ -188,10 +215,13 @@ char unblock(int pid) {
             prev->next = del->next;
         else
             firstBlocked = del->next;
+        del->next = NULL;
+        if (lastReady != NULL)
+            lastReady->next = del;
+        else
+            firstReady = del;
+        lastReady = del;
     }
-
-    if (pid == del->pid)
-        forceTimer();
     
     return EXIT_SUCCESS;
 }
@@ -217,11 +247,16 @@ char kill(int pid) {
             firstReady = del->next;
     }
 
-    if (pid == del->pid)
-        forceTimer();
-    
-    vPortFree((void *) del->rsp);
+    processCDT * next = del->next;
+
+    vPortFree((void *) del->rbp - STACK_SIZE);
     vPortFree((void *) del);
+
+    if (pid == currentProcess->pid) {
+        update = 0;
+        currentProcess = next;
+        forceTimer();
+    }
 
     return EXIT_SUCCESS;
 }
@@ -239,12 +274,13 @@ char nice(char offset) {
 
 void updateRSP(uint64_t newRsp) {
     if (currentProcess == NULL) {
-        ncClear();
-		ncPrint("ES NULL");
+        // ncClear();
+		// ncPrint("ES NULL");
         // wait(4);
         return;
     }
-    currentProcess->rsp = newRsp;
+    if (update)
+        currentProcess->rsp = newRsp;
 }
 
 int getPid() {

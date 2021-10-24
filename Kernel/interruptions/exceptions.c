@@ -84,12 +84,12 @@ static void startOver() {
 
 	clear();
 	// cleanProcesses();
-	moveToWindowVideo(1);
+	// moveToWindowVideo(1);
 	//((fn)sampleCodeAddress)();
 }
 
 static void genericException(char * string, int len) {
-	moveToWindowVideo(-1);
+	// moveToWindowVideo(-1);
 	clear();
 	printStringLen(15, string, len);
     printRegs();

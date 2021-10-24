@@ -5,6 +5,10 @@ void printString(char * string) {
     sys_write(1, string, len);
 }
 
+void printStringLen(char * string, int len) {
+    sys_write(1, string, len);
+}
+
 void printStringError(char * string) {
     int len = strlen(string);
     sys_write(2, string, len);
