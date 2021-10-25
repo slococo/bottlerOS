@@ -10,6 +10,7 @@
 #include "quadratic.h"
 #include "cpu_id.h"
 #include "change.h"
+#include "ps.h"
 
 #define SIZE 100
 #define MAX_ARGS 5
@@ -18,8 +19,8 @@
 #define ROWS 25
 
 const int len = 8;
-char *commands_void[] = {"help", "time", "inforeg", "excdiv", "excop", "clear", "cpufeatures", "change"};
-void (*func []) (char *, int *) = {help, time, inforeg, excdiv, excop, clear, cpufeatures, change};
+char *commands_void[] = {"help", "time", "inforeg", "excdiv", "excop", "clear", "cpufeatures", "ps"};
+void (*func []) (char *, int *) = {help, time, inforeg, excdiv, excop, clear, cpufeatures, ps};
 
 void substractLine(char * window, int * offset) {
     for (int i = 0; i < ROWS - 1; i++) {
@@ -36,7 +37,11 @@ void substractLine(char * window, int * offset) {
 
 void addText(char * buffer, char * window, int * offset) {
     while (*buffer != 0) {
-        if (*offset == ROWS * COLS - 1) substractLine(window, offset);
+        if (*offset == ROWS * COLS - 1) substractLine(window, offset); 
+        if (*buffer == '\n') {
+            buffer++;
+            substractLine(window, offset);
+        }
         window[(*offset)++] = *buffer++;
     }
 }

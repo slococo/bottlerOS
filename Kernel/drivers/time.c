@@ -12,7 +12,7 @@ int ticks_elapsed() {
 
 int seconds_elapsed() {
 	// return ticks / 18;
-	return ticks;
+	return ticks / 18;
 }
 
 int getTime(char option) {
@@ -33,6 +33,11 @@ int getTime(char option) {
 	}
 }
 
+// TODO
 void wait(long seconds) {
-	while (seconds_elapsed() < seconds);
+	// int initialSeconds = getTime(SECONDS);
+	// while (initialSeconds - seconds != initialSeconds) {
+
+	// }
+	// while (seconds_elapsed() < seconds);
 }

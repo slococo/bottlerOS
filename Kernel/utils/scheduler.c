@@ -63,7 +63,7 @@ uint64_t nextProcess() {
     if (currentProcess->next != NULL)
         currentProcess = currentProcess->next;
     else {
-        // ncPrint("Una venezolana para el socio biza");
+        // ncPrint("Una colombiana para el socio biza");
         // wait(4);
         currentProcess = firstReady;
     }
@@ -80,6 +80,11 @@ void initScheduler() {
     char * argv[] = {"Dummy"};
     enqueueProcess(idle, 0, 1, argv);
 }
+
+// void setFn(void (*fn) (int, char **), int argc, char *argv[]) {
+//     currentProcess->rsp = (currentProcess->rbp) - 20;
+    // _initialize_stack_frame(fn, currentProcess->rbp, argc, argv);
+// }
 
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
     if (firstReady != NULL && firstReady->pid == INIT_PID)
@@ -313,50 +318,72 @@ char getProcessData(char * out, processCDT * proc) {
     char written = 0;
 
     char flag = 0;
-    for (int j = 0; j < MAX_ATTR_SIZE; j++) {
-        if (proc->name[j] != 0)
+    for (int j = 0; j < MAX_NAME_SIZE; j++) {
+        if (!flag && proc->name[j] == 0)
             flag = 1;
-        if (flag){
+        else if (flag)
             out += addSpaces(out, 1);
-        } else
+        else
             *out++ = proc->name[j];
     }
-    written += MAX_ATTR_SIZE;
+    written += MAX_NAME_SIZE;
 
     out += addSpaces(out, 2);
     written += 2;
     
     char buffer[10];
-    written += strcpy(out, itoa(proc->pid, buffer, 10, 10));
+    char copied = strcpy(out, itoa(proc->pid, buffer, 10, 10));
+    out += copied;
+    out += addSpaces(out, MAX_ATTR_SIZE - copied);
+    written += MAX_ATTR_SIZE - copied;
     out += addSpaces(out, 2);
+    written += copied + 2;
 
-    buffer[0] = 0;
-    written += strcpy(out, itoa(proc->priority, buffer, 10, 2));
+    // buffer = itoa(proc->priority, buffer, 10, 2);
+    copied = strcpy(out, itoa(proc->priority, buffer, 10, 2));
+    out += copied;
+    out += addSpaces(out, MAX_ATTR_SIZE - copied);
+    written += MAX_ATTR_SIZE - copied;
     out += addSpaces(out, 2);
+    written += copied + 2;
 
-    buffer[0] = 0;
-    written += strcpy(out, itoa(proc->rsp, buffer, 16, 10));
+    copied = strcpy(out, itoa(proc->rsp, buffer, 16, 10));
+    out += copied;
+    out += addSpaces(out, MAX_NAME_SIZE - copied);
+    written += MAX_NAME_SIZE - copied;
     out += addSpaces(out, 2);
+    written += copied + 2;
 
-    buffer[0] = 0;
-    written += strcpy(out, itoa(proc->rbp, buffer, 16, 10));
+    copied = strcpy(out, itoa(proc->rbp, buffer, 16, 10));
+    out += copied;
+    out += addSpaces(out, MAX_NAME_SIZE - copied);
+    written += MAX_NAME_SIZE - copied;
     out += addSpaces(out, 2);
+    written += copied + 2;
 
-    buffer[0] = 0;
-    written += strcpy(out, (proc->foreground == 1) ? "F" : "B");
+    copied = strcpy(out, (proc->foreground == 1) ? "F" : "B");
+    out += copied;
+    out += addSpaces(out, MAX_ATTR_SIZE - copied);
+    written += MAX_ATTR_SIZE - copied;
+    out += addSpaces(out, 2);
+    written += copied + 2;
     // out += addSpaces(out, 2);
+    // *out++;
+    // *out = '\0';
     
     return written;
 }
 
 char * processes(){
     char * ans = pvPortMalloc(pids * PROCESS_DATA_MAX_SIZE);
+    char * ret = ans;
     
-    int lastPid = getPid();
-    if (lastPid == EXIT_FAILURE)
-        return NULL;
+    char * info = "name       pid     prio    rsp         rbp         fore\n";
+    strcpy(ans, info);
+    ans += 56;
+
     processCDT * aux = firstReady;
-    while (aux != NULL){
+    while (aux != NULL) {
         char writtenChars = getProcessData(ans, aux);
         if (writtenChars == EXIT_FAILURE)
             return NULL;
@@ -371,7 +398,8 @@ char * processes(){
             aux = aux->next;
     }
     *ans = 0;
-    return ans;
+
+    return ret;
 }
 
 /*

@@ -16,12 +16,12 @@ void inforeg(char * window, int * offset) {
 	char bufferAux[20];
 	
 	for (int i = 0; i < 17; i++) {
-		if (i % 3 == 0 && i != 0)
+		if (i % 5 == 0 && i != 0)
 			substractLine(window, offset);
 		addText(regsNames[i], window, offset);
 		addText("0x", window, offset);
 		addText(gtoa(regs[i], bufferAux, 16, 20), window, offset);
-		if (i != 14 && i % 3 != 2)
+		if (i != 14 && i % 5 != 4)
 			addText(" - ", window, offset);
 	}
 	printWindow(window);

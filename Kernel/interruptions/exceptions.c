@@ -74,15 +74,21 @@ void printRegs() {
     *rspValueA = (uint64_t) getSampleRSP();
 }
 
+void exitProcess();
 static void startOver() {
-	unsigned char key = 0;
-	while (key != '\n') {
-		_sti();
-		haltcpu();
-		key = getKeyFromBuffer();
-	}
-
 	clear();
+	exitProcess();
+
+	// TODO : hacer wait con getTimegen
+	
+	// unsigned char key = 0;
+	// while (key != '\n') {
+	// 	_sti();
+	// 	haltcpu();
+	// 	key = getKeyFromBuffer();
+	// }
+
+	// clear();
 	// cleanProcesses();
 	// moveToWindowVideo(1);
 	//((fn)sampleCodeAddress)();
