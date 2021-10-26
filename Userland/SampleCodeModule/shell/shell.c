@@ -11,6 +11,7 @@
 #include "cpu_id.h"
 #include "change.h"
 #include "ps.h"
+#include "sem.h"
 
 #define SIZE 100
 #define MAX_ARGS 5
@@ -18,9 +19,9 @@
 #define COLS 80
 #define ROWS 25
 
-const int len = 8;
-char *commands_void[] = {"help", "time", "inforeg", "excdiv", "excop", "clear", "cpufeatures", "ps"};
-void (*func []) (char *, int *) = {help, time, inforeg, excdiv, excop, clear, cpufeatures, ps};
+const int len = 9;
+char *commands_void[] = {"help", "time", "inforeg", "excdiv", "excop", "clear", "cpufeatures", "ps", "sem"};
+void (*func []) (char *, int *) = {help, time, inforeg, excdiv, excop, clear, cpufeatures, ps, sem};
 
 void substractLine(char * window, int * offset) {
     for (int i = 0; i < ROWS - 1; i++) {

@@ -1,5 +1,5 @@
 #include "scheduler.h"
-#define INIT_PID 1
+#define IDLE_PID 1
 
 void _initialize_stack_frame(void *, void *, int, char**);
 
@@ -16,6 +16,7 @@ typedef struct processCDT {
     char executions;
     char foreground;
     enum states state;
+    int * fd;
 } processCDT;
 
 processCDT * firstReady = NULL;
@@ -23,48 +24,27 @@ processCDT * lastReady = NULL;
 processCDT * firstBlocked = NULL;
 processCDT * lastBlocked = NULL;
 
-int readyLen = 0;
-int blockedLen = 0;
-
 static processCDT * currentProcess = NULL;
-static int pids = INIT_PID;
+static int pids = IDLE_PID;
 static char update = 1;
-
-#include "naiveConsole.h"
-#include "time.h"
-
 
 uint64_t nextProcess() {
     update = 1;
     if (currentProcess == NULL) {
-        // ncClear();
-        // ncPrint("Una cubana para el socio biza");
-        // ncPrint(firstReady->name);
-        // // ncPrintDec(firstReady->pid);
-        // ncPrintHex(firstReady->rsp);
-        // ncPrintHex(firstReady->rbp);
-        // wait(4);
         if (firstReady == NULL)
-            unblock(INIT_PID);
+            unblock(IDLE_PID);
 
         currentProcess = firstReady;
         return firstReady->rsp;
     }
     if (currentProcess->executions < MAX_PRIORITY - currentProcess->priority + 1) {
         currentProcess->executions++;
-        // ncClear();
-        // ncPrint("Hola");
-        // ncPrintDec(firstReady->pid);
-        // wait(4);
         return currentProcess->rsp;
     }
-    // ncPrint("Chau");
     currentProcess->executions = 0;
     if (currentProcess->next != NULL)
         currentProcess = currentProcess->next;
     else {
-        // ncPrint("Una colombiana para el socio biza");
-        // wait(4);
         currentProcess = firstReady;
     }
     return currentProcess->rsp;
@@ -77,7 +57,7 @@ void idle() {
 }
 
 void initScheduler() {
-    char * argv[] = {"Dummy"};
+    char * argv[] = {"Idle"};
     enqueueProcess(idle, 0, 1, argv);
 }
 
@@ -87,8 +67,8 @@ void initScheduler() {
 // }
 
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
-    if (firstReady != NULL && firstReady->pid == INIT_PID)
-        block(INIT_PID);
+    if (firstReady != NULL && firstReady->pid == IDLE_PID)
+        block(IDLE_PID);
 
     processADT process = pvPortMalloc(sizeof(processCDT));
     uint64_t * auxi = pvPortMalloc(STACK_SIZE);
@@ -279,9 +259,6 @@ char nice(char offset) {
 
 void updateRSP(uint64_t newRsp) {
     if (currentProcess == NULL) {
-        // ncClear();
-		// ncPrint("ES NULL");
-        // wait(4);
         return;
     }
     if (update)
@@ -311,6 +288,17 @@ char addSpaces(char * str, char qty) {
     return aux;
 }
 
+char getGenProcessData(char ** out, char * written, char toAdd, char * in, char isLast) {
+    char copied = strcpy(*out, in);
+    *out += copied;
+    *out += addSpaces(*out, toAdd - copied);
+    *written += toAdd;
+    if (!isLast) {
+        *out += addSpaces(*out, 2);
+        *written += 2;
+    }
+}
+
 char getProcessData(char * out, processCDT * proc) {
     if (proc == NULL)
         return EXIT_FAILURE;
@@ -332,44 +320,45 @@ char getProcessData(char * out, processCDT * proc) {
     written += 2;
     
     char buffer[10];
-    char copied = strcpy(out, itoa(proc->pid, buffer, 10, 10));
-    out += copied;
-    out += addSpaces(out, MAX_ATTR_SIZE - copied);
-    written += MAX_ATTR_SIZE - copied;
-    out += addSpaces(out, 2);
-    written += copied + 2;
-
-    // buffer = itoa(proc->priority, buffer, 10, 2);
-    copied = strcpy(out, itoa(proc->priority, buffer, 10, 2));
-    out += copied;
-    out += addSpaces(out, MAX_ATTR_SIZE - copied);
-    written += MAX_ATTR_SIZE - copied;
-    out += addSpaces(out, 2);
-    written += copied + 2;
-
-    copied = strcpy(out, itoa(proc->rsp, buffer, 16, 10));
-    out += copied;
-    out += addSpaces(out, MAX_NAME_SIZE - copied);
-    written += MAX_NAME_SIZE - copied;
-    out += addSpaces(out, 2);
-    written += copied + 2;
-
-    copied = strcpy(out, itoa(proc->rbp, buffer, 16, 10));
-    out += copied;
-    out += addSpaces(out, MAX_NAME_SIZE - copied);
-    written += MAX_NAME_SIZE - copied;
-    out += addSpaces(out, 2);
-    written += copied + 2;
-
-    copied = strcpy(out, (proc->foreground == 1) ? "F" : "B");
-    out += copied;
-    out += addSpaces(out, MAX_ATTR_SIZE - copied);
-    written += MAX_ATTR_SIZE - copied;
-    out += addSpaces(out, 2);
-    written += copied + 2;
+    getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->pid, buffer, 10, 10), 0);
+    // char copied = strcpy(out, itoa(proc->pid, buffer, 10, 10));
+    // out += copied;
+    // out += addSpaces(out, MAX_ATTR_SIZE - copied);
+    // written += MAX_ATTR_SIZE;
     // out += addSpaces(out, 2);
-    // *out++;
-    // *out = '\0';
+    // written += 2;
+
+    getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->priority, buffer, 10, 2), 0);
+    // copied = strcpy(out, itoa(proc->priority, buffer, 10, 2));
+    // out += copied;
+    // out += addSpaces(out, MAX_ATTR_SIZE - copied);
+    // written += MAX_ATTR_SIZE;
+    // out += addSpaces(out, 2);
+    // written += 2;
+
+    getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rsp, buffer, 16, 10), 0);
+    // copied = strcpy(out, itoa(proc->rsp, buffer, 16, 10));
+    // out += copied;
+    // out += addSpaces(out, MAX_NAME_SIZE - copied);
+    // written += MAX_NAME_SIZE;
+    // out += addSpaces(out, 2);
+    // written += 2;
+
+    getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rbp, buffer, 16, 10), 0);
+    // copied = strcpy(out, itoa(proc->rbp, buffer, 16, 10));
+    // out += copied;
+    // out += addSpaces(out, MAX_NAME_SIZE - copied);
+    // written += MAX_NAME_SIZE;
+    // out += addSpaces(out, 2);
+    // written += 2;
+
+    getGenProcessData(&out, &written, MAX_ATTR_SIZE, (proc->foreground == 1) ? "F" : "B", 1);
+    // *out++ = (proc->foreground == 1) ? 'F' : 'B';
+    // out += addSpaces(out, MAX_ATTR_SIZE - 1);
+    // written += MAX_ATTR_SIZE;
+
+    // out += addSpaces(out, 2);
+    // written += 2;
     
     return written;
 }
@@ -379,15 +368,15 @@ char * processes(){
     char * ret = ans;
     
     char * info = "name       pid     prio    rsp         rbp         fore\n";
-    strcpy(ans, info);
-    ans += 56;
+    ans += strcpy(ans, info);
+    // ans += 56;
 
     processCDT * aux = firstReady;
     while (aux != NULL) {
         char writtenChars = getProcessData(ans, aux);
         if (writtenChars == EXIT_FAILURE)
             return NULL;
-        ans += writtenChars;
+        ans += writtenChars - 1;
         *ans++ = '\n';
 
         if (aux == lastBlocked)
@@ -397,7 +386,7 @@ char * processes(){
         else
             aux = aux->next;
     }
-    *ans = 0;
+    *--ans = 0;
 
     return ret;
 }
@@ -406,7 +395,7 @@ char * processes(){
 ● Crear un proceso. DEBERÁ soportar el pasaje de parámetros. LISTO
 ● Obtener el ID del proceso que llama. LISTO
 ● Listar todos los procesos: nombre, ID, prioridad, stack y base pointer, foreground y
-cualquier otra variable que consideren necesaria.
+cualquier otra variable que consideren necesaria. LISTO
 ● Matar un proceso arbitrario. LISTO
 ● Modificar la prioridad de un proceso arbitrario.  LISTO
 ● Bloquear y desbloquear un proceso arbitrario. LISTO

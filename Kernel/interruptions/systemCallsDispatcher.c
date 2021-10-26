@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "systemCalls.h"
+#include "memManager.h"
 
 void exitProcess();
 // void setFn(uint64_t, uint64_t, uint64_t);
@@ -26,6 +27,13 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             break;
         case 6:
             return (uint64_t) processes();
+        case 7:
+            return (uint64_t) getSems();
+        case 8:
+            return pvPortMalloc(rsi);
+        case 9:
+            vPortFree(rsi);
+            break;
         default:
             return -1;
 	}

@@ -4,16 +4,15 @@
 extern char bss;
 extern char endOfBinary;
 
-int main();
+int main(int argc, char *argv[]);
 
 void * memset(void * destiny, int32_t c, uint64_t length);
 
-int _start() {
+int _start(int argc, char *argv[]) {
 	//Clean BSS
 	memset(&bss, 0, &endOfBinary - &bss);
 
-	return main();
-
+	return main(argc, argv);
 }
 
 

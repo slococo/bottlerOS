@@ -3,7 +3,7 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
-GLOBAL sys_exit, sys_exec, sys_fork, sys_ps
+GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem
 
 section .text
 
@@ -70,50 +70,83 @@ sys_exit:
     pop rbp
     ret
 
-sys_fork:
+sys_malloc:
     push rbp
     mov rbp, rsp
 
 	push rdi
-	push rsi
-	push rdx
 
-	mov rdx, rbp
-	mov rsi, rsp
-	mov rdi, 3
+	mov rdi, 8
 	int 80h
 
-	pop rdx
-	pop rsi
 	pop rdi
 
     mov rsp, rbp
     pop rbp
     ret
 
-sys_exec:
+sys_free:
     push rbp
     mov rbp, rsp
 
 	push rdi
 	push rsi
-	push rdx
-	push rcx
 
-	mov rcx, rdx
-	mov rdx, rsi
 	mov rsi, rdi
-	mov rdi, 5
+	mov rdi, 9
 	int 80h
 
-	pop rcx
-	pop rdx
 	pop rsi
 	pop rdi
 
     mov rsp, rbp
     pop rbp
     ret
+
+; sys_fork:
+;     push rbp
+;     mov rbp, rsp
+
+; 	push rdi
+; 	push rsi
+; 	push rdx
+
+; 	mov rdx, rbp
+; 	mov rsi, rsp
+; 	mov rdi, 3
+; 	int 80h
+
+; 	pop rdx
+; 	pop rsi
+; 	pop rdi
+
+;     mov rsp, rbp
+;     pop rbp
+;     ret
+
+; sys_exec:
+;     push rbp
+;     mov rbp, rsp
+
+; 	push rdi
+; 	push rsi
+; 	push rdx
+; 	push rcx
+
+; 	mov rcx, rdx
+; 	mov rdx, rsi
+; 	mov rsi, rdi
+; 	mov rdi, 5
+; 	int 80h
+
+; 	pop rcx
+; 	pop rdx
+; 	pop rsi
+; 	pop rdi
+
+;     mov rsp, rbp
+;     pop rbp
+;     ret
 	
 sys_ps:
     push rbp
@@ -122,6 +155,21 @@ sys_ps:
 	push rdi
 
 	mov rdi, 6
+	int 80h
+
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_sem:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+
+	mov rdi, 7
 	int 80h
 
 	pop rdi
