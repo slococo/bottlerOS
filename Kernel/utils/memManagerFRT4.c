@@ -25,7 +25,9 @@ typedef unsigned long UBaseType_t;
 #define configTOTAL_HEAP_SIZE                   1024 * 1024 * 100
 #define configAPPLICATION_ALLOCATED_HEAP        0
 #define portBYTE_ALIGNMENT 8
+// #define portBYTE_ALIGNMENT 16
 #define portBYTE_ALIGNMENT_MASK ( 0x0007 ) // 8
+// #define portBYTE_ALIGNMENT_MASK ( 0x000F ) // 16
 #define pdFALSE			( ( BaseType_t ) 0 )
 #define pdTRUE			( ( BaseType_t ) 1 )
 #define portPOINTER_SIZE_TYPE uint32_t
@@ -198,12 +200,12 @@ void *pvReturn = NULL;
 					else {
 
 							ncNewline();
-				ncPrint("MALLOC: ");
-				ncPrintDec(xFreeBytesRemaining);
-				ncPrint(" ");
-				ncPrintDec(xWantedSize);
-				ncPrint(" ");
-				ncPrintDec(configADJUSTED_HEAP_SIZE);
+				// ncPrint("MALLOC: ");
+				// ncPrintDec(xFreeBytesRemaining);
+				// ncPrint(" ");
+				// ncPrintDec(xWantedSize);
+				// ncPrint(" ");
+				// ncPrintDec(configADJUSTED_HEAP_SIZE);
 							ncNewline();
 					}
 		}

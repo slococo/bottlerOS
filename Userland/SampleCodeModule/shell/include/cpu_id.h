@@ -1,5 +1,8 @@
-#ifndef CPUID
-#define CPUID
+#ifndef CPUID_H
+#define CPUID_H
+
+#include "libc.h"
+#include "shell.h"
 
 // Tabla obtenidad de: https://wiki.osdev.org/CPUID
 enum {
@@ -68,7 +71,7 @@ enum {
 
 };
 
-void cpufeatures(char * window, int * offset);
+void cpufeatures();
 int cpu_id_support(void);
 
 #endif

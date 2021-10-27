@@ -10,20 +10,19 @@ static char * regsNames[] = {
 	"R8: ", "R9: ", "R10: ", "R11: ", "R12: ", "R13: ", "R14: ", "R15: ",
 	"RSP: ", "RIP: "};
 
-void inforeg(char * window, int * offset) {
+void inforeg() {
 	uint64_t * regs = (uint64_t *) _getRegs();
 
 	char bufferAux[20];
 	
 	for (int i = 0; i < 17; i++) {
 		if (i % 5 == 0 && i != 0)
-			substractLine(window, offset);
-		addText(regsNames[i], window, offset);
-		addText("0x", window, offset);
-		addText(gtoa(regs[i], bufferAux, 16, 20), window, offset);
+			new_line();
+		printString(regsNames[i]);
+		printStringLen("0x", 2);
+		printString(gtoa(regs[i], bufferAux, 16, 20));
 		if (i != 14 && i % 5 != 4)
-			addText(" - ", window, offset);
+			printStringLen(" - ", 3);
 	}
-	printWindow(window);
-	substractLine(window, offset);
+	new_line();
 }

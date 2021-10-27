@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #define IDLE_PID 1
 
+// void _initialize_stack_frame(void *, void *, int, char**, void **, void **);
 void _initialize_stack_frame(void *, void *, int, char**);
 
 enum states {READY = 0, BLOCKED};
@@ -17,6 +18,8 @@ typedef struct processCDT {
     char foreground;
     enum states state;
     int * fd;
+    void * sseBytes;
+    void * fpuBytes;
 } processCDT;
 
 processCDT * firstReady = NULL;
@@ -67,6 +70,7 @@ void initScheduler() {
 // }
 
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
+// void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd[2]) {
     if (firstReady != NULL && firstReady->pid == IDLE_PID)
         block(IDLE_PID);
 
@@ -95,7 +99,10 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     process->executions = 0;
     process->foreground = foreground;
     process->state = READY;
+    // process->sseBytes = pvPortMalloc(64);
+    // process->fpuBytes = pvPortMalloc(14);
 
+    // _initialize_stack_frame(fn, rbp, argc, argv, &(process->fpuBytes), &(process->sseBytes));
     _initialize_stack_frame(fn, rbp, argc, argv);
 
     if (firstReady == NULL)
@@ -113,6 +120,14 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     // ncPrintHex(process->rbp);
     // wait(3);
     return;
+}
+
+void * getSSEaddress() {
+    return currentProcess->sseBytes;
+}
+
+void * getFPUaddress() {
+    return currentProcess->fpuBytes;
 }
 
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp) {
@@ -139,7 +154,7 @@ void newProcess(processADT process, char * name, char priority, char foreground,
 //     exit();
 // }
 
-processADT search(processADT * previous, int pid, processADT first) {
+processADT searchProcess(processADT * previous, int pid, processADT first) {
     processADT curr = first;
     * previous = NULL;
     while (curr != NULL) {
@@ -162,7 +177,7 @@ processADT search(processADT * previous, int pid, processADT first) {
 
 char block(int pid) {
     processADT prev = NULL;
-    processADT del = search(&prev, pid, firstReady);
+    processADT del = searchProcess(&prev, pid, firstReady);
     if (del == NULL)
         return EXIT_FAILURE;
     else {
@@ -192,7 +207,7 @@ char block(int pid) {
 
 char unblock(int pid) {
     processADT prev = NULL;
-    processADT del = search(&prev, pid, firstBlocked);
+    processADT del = searchProcess(&prev, pid, firstBlocked);
     if (del == NULL)
         return EXIT_FAILURE;
     else {
@@ -213,9 +228,9 @@ char unblock(int pid) {
 
 char kill(int pid) {
     processADT prev = NULL;
-    processADT del = search(&prev, pid, firstReady);
+    processADT del = searchProcess(&prev, pid, firstReady);
     if (del == NULL) {
-        del = search(&prev, pid, firstBlocked);
+        del = searchProcess(&prev, pid, firstBlocked);
         if (del == NULL)
             return EXIT_FAILURE;
         else {
@@ -244,6 +259,18 @@ char kill(int pid) {
     }
 
     return EXIT_SUCCESS;
+}
+
+int getFdOut() {
+    if (currentProcess == NULL)
+        return NULL;
+    return currentProcess->fd[1];
+}
+
+int getFdIn() {
+    if (currentProcess == NULL)
+        return NULL;
+    return currentProcess->fd[0];
 }
 
 void exitProcess() {
@@ -278,14 +305,6 @@ char quitCPU() {
     // return block(pid);
     forceTimer();
     return EXIT_SUCCESS;
-}
-
-char addSpaces(char * str, char qty) {
-    char aux = qty;
-    while (qty-- > 0) {
-        *str++ = ' ';
-    }
-    return aux;
 }
 
 char getGenProcessData(char ** out, char * written, char toAdd, char * in, char isLast) {

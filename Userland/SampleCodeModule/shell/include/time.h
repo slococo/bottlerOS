@@ -7,7 +7,7 @@ int getHours();
 int getDays();
 int getMonths();
 int getYears();
-void time(char * window, int * offset);
+void time();
 
 #define SECONDS 0
 #define MINUTES 2

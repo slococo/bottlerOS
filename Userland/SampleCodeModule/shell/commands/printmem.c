@@ -13,16 +13,15 @@ void getMem(int * buffer, int initialAddress) {
     }
 }
 
-void printmem(char * window, int * offset, long dir) {
+void printmem(long dir) {
 	int buffer[8];
 	
 	getMem(buffer, dir);
 	
 	for (int i = 0; i < 8; i++) {
 		char bufferAux[8];
-		addText("0x", window, offset);
-		addText(itoa(buffer[i], bufferAux, 16), window, offset);
-		substractLine(window, offset);
+		printStringLen("0x", 2);
+		printString(itoa(buffer[i], bufferAux, 16));
+		new_line();
 	}
-	printWindow(window);
 }

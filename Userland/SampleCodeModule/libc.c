@@ -30,11 +30,15 @@ int strcmp(const char * s1, const char * s2) {
 
 void putChar(char c){
     char buffer = c;
-    sys_write(1, &buffer, 1);
+    sys_write(1, &buffer, 0);
 }
 
 void new_line() {
     putChar('\n');
+}
+
+void backspace() {
+    putChar('\b');
 }
 
 void winClear() {

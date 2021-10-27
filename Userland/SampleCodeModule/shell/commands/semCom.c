@@ -1,8 +1,8 @@
 #include "libc.h"
 #include "shell.h"
 
-void ps() {
-    char * output = sys_ps();
+void sem() {
+    char * output = sys_sem();
     printString(output);
     new_line();
     // sys_free(output);

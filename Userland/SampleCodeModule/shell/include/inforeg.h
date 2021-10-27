@@ -1,6 +1,6 @@
 #ifndef REG_LIB
 #define REG_LIB
 
-void inforeg(char*, int*);
+void inforeg();
 
 #endif

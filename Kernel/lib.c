@@ -66,6 +66,14 @@ char * reverse(char * buffer, int i, int j) {
 int abs(int value) {
     return value < 0 ? -value : value;
 }
+
+char addSpaces(char * str, char qty) {
+    char aux = qty;
+    while (qty-- > 0) {
+        *str++ = ' ';
+    }
+    return aux;
+}
  
 char * itoa(int value, char * buffer, int base, int length) {
    if (base < 2 || base > 32) {

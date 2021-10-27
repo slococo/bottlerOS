@@ -1,29 +1,6 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include "lib.h"
-#include "scheduler.h"
-#include "memManager.h"
+#include "sem.h"
 
-#define MAX_SEM 100
-#define MAX_NAME 100
-#define SEM_DATA_MAX_SIZE 100
-
-void enter_region(uint32_t * lock);
-void leave_region(uint32_t * lock);
 static uint32_t semLock;
-
-typedef struct pid_t {
-    int pid;
-    struct pid_t * next;
-} pid_t;
-
-typedef struct sem_t {
-    unsigned int value;
-    char name[MAX_NAME];
-    pid_t * entering;
-    pid_t * last;
-} sem_t;
 
 typedef struct node_t {
     sem_t * sem;
@@ -31,7 +8,7 @@ typedef struct node_t {
 } node_t;
 
 static sem_t semaphores[MAX_SEM];
-node_t * first = NULL;
+node_t * firstSem = NULL;
 static char counter = 0;
 
 sem_t * semOpen(char * name, unsigned int value) {
@@ -40,8 +17,8 @@ sem_t * semOpen(char * name, unsigned int value) {
     sem_t * sem = pvPortMalloc(sizeof(sem_t));
     node_t * node = pvPortMalloc(sizeof(node_t));
     node->sem = sem;
-    node->next = first;    
-    first = node;
+    node->next = firstSem;    
+    firstSem = node;
     strcpy(sem->name, name);
     sem->value = value;
     counter++;
@@ -57,12 +34,12 @@ int semClose(sem_t * sem) {
 
     node_t * del = NULL;
 
-    if (first == sem) {
-        del = first;
-        first = first->next;
+    if (firstSem == sem) {
+        del = firstSem;
+        firstSem = firstSem->next;
     }
     else {
-        node_t * aux = first;
+        node_t * aux = firstSem;
         while (aux != NULL) {
             if (aux->next != NULL)
                 if (aux->next->sem == sem) {
@@ -176,7 +153,7 @@ char * getSems() {
     ans += strcpy(ans, info);
     // ans += 56;
 
-    node_t * aux = first;
+    node_t * aux = firstSem;
     while (aux != NULL) {
         char writtenChars = getSemaphoresData(ans, aux);
         if (writtenChars == EXIT_FAILURE)

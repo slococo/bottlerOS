@@ -30,6 +30,8 @@ GLOBAL loadProcess
 GLOBAL _initialize_stack_frame
 GLOBAL _switchContext
 
+EXTERN getFPUaddress, getSSEaddress
+
 SECTION .text
 
 %macro pushState 0
@@ -136,9 +138,44 @@ picSlaveMask:
     pop     rbp
     retn
 
+; getFPUaddress:
+; 	push rcx
+; 	mov ecx, [auxi]
+; 	mov ecx, 1
+; 	xor ecx, [auxi]
+; 	cmp ecx, 0
+; 	jne .getSecond
+; 	mov rax, bytesForFPU1
+; 	jmp .finish
+; .getSecond:
+; 	mov rax, bytesForFPU2
+; .finish:
+; 	mov dword [auxi], ecx
+; 	pop rcx
+; 	ret
+
+; getSSEaddress:
+; 	push rcx
+; 	mov ecx, [auxi]
+; 	cmp ecx, 0
+; 	jne .getSecond
+; 	mov rax, bytesForSSEAligned1
+; 	jmp .finish
+; .getSecond:
+; 	mov rax, bytesForSSEAligned2
+; .finish:
+; 	pop rcx
+; 	ret
+
 ;8254 Timer (Timer Tick)
 _irq00Handler:
 	pushState
+	; push rax
+	; call getFPUaddress
+	; fsave [rax]
+	; call getSSEaddress
+	; fxsave [rax]
+	; pop rax
 	; fsave [bytesForFPU]
 	; fxsave [bytesForSSEAligned]
 
@@ -156,9 +193,13 @@ _irq00Handler:
 
 	; fxrstor [bytesForSSEAligned]
 	; frstor [bytesForFPU]
+	; push rax
+	; call getFPUaddress
+	; frstor [rax]
+	; call getSSEaddress
+	; fxrstor [rax]
+	; pop rax
 	popState
-	; pop rsi ; argv
-	; pop rdi ; argc 6004d8
 	iretq
 
 ;Keyboard
@@ -236,16 +277,24 @@ _initialize_stack_frame:
 	push 0x0 ; ss
     push rsi ; sp
     push 0x202 ; rflags
-    push 0x08 ; cs -- offset de la GDT
+    push 0x08 ; cs
     push rdi ; IP
-	; push rdx ; argc
-	; push rcx ; argv
+
+	mov rsi, rcx
+	mov rdi, rdx 
 
     pushState
-	; mov rdi, rsp
-	; call newStack
-    
-	; mov rax, rsp
+	; fsave [bytesForFPU]
+	; push rax
+	; mov dword [auxi], 1
+	; call getFPUaddress
+	; call getSSEaddress
+	; pop rax
+	; fxsave [bytesForSSEAligned]
+
+	; fsave [r8]
+	; fxsave [r9]
+
     mov rsp, r10
     ret
 
@@ -262,41 +311,19 @@ _systemCallsHandler:
 	popStateNoRax
 	iretq
 
-; switch Context (int 81h)
-;	_switchContext:
-;		pushState
-;		
-;		call changeWindow
-;		mov rdi, rsp
-;		call preserveStack
-;	
-;		mov rsp, rax
-;		popState
-;		pop rsi ; argv
-;		pop rdi ; argc
-;		iretq
-
-; _switchContext:
-; 	pushState
-	
-; 	mov rdi, rsp
-; 	call updateRSP
-
-; 	call nextProcess
-
-; 	mov rsp, rax
-; 	popState
-; 	pop rsi ; argv
-; 	pop rdi ; argc
-; 	iretq
-
 SECTION .data
 	align 16
 	bytesForSSEAligned times 512 db 0
+	; bytesForSSEAligned1 times 512 db 0
+	; bytesForSSEAligned2 times 512 db 0
+	; counter dd 1
 
 SECTION .bss
 	aux resq 1
 	bytesForSSE resb 512
 	bytesForFPU resb 108
+	; bytesForFPU1 resb 108
+	; bytesForFPU2 resb 108
 	insPointer resb 8
 	rspPointer resb 8
+	; auxi resb 4

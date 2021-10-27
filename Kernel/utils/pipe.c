@@ -1,99 +1,65 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include "lib.h"
-#include "scheduler.h"
-#include "memManager.h"
-#include "semaphore.h"
+#include "pipe.h"
 
-#define MAX_SEM 100
-#define MAX_NAME 100
-#define PIPE_MAX_SIZE 1024
-#define SEM_NAME "Pipes"
+int fds = 2;
 
-typedef struct pipe_t {
-    char buffer[PIPE_MAX_SIZE];
-    int current;
-    char name[MAX_NAME];
-    sem_t * sem;
-} pipe_t;
-
-typedef struct node_t {
-    pipe_t * pipe;
-    struct node_t * next;
-} node_t;
-
-node_t * first;
-
-// char initPipes() {
-    // if ((sem = semOpen(SEM_NAME)) == NULL)
-    //     return EXIT_FAILURE;
-    // return EXIT_SUCCESS;
-// }
+node_t * firstPipe;
 
 pipe_t * openPipe(char * name) {
-    // semWait(sem);
-
     pipe_t * pipe = pvPortMalloc(sizeof(pipe_t));
     strcpy(pipe->name, name);
-    if ((pipe->sem = semOpen(SEM_NAME)) == NULL)
+    pipe->fd = fds++;
+    if ((pipe->sem = semOpen(SEM_NAME, 1)) == NULL)
         return NULL;
 
     return pipe;
-    // semPost(sem);
 }
 
-void writePipe(pipe_t * pipe, char c) {
-    if (!exists(pipe))
-        return;
+void writePipe(int fd, char c) {
+    node_t * prev = NULL;
+    node_t * node = searchPipe(&prev, fd);
 
-    semWait(pipe->sem);
+    semWait(node->pipe->sem);
 
-    pipe->buffer[pipe->current++ % PIPE_MAX_SIZE] = c;
+    node->pipe->buffer[node->pipe->current++ % PIPE_MAX_SIZE] = c;
 
-    semPost(pipe->sem);
+    semPost(node->pipe->sem);
 }
 
-char readPipe(pipe_t * pipe) {
-    if (!exists(pipe))
-        return -1;
+char readPipe(int fd) {
+    node_t * prev = NULL;
+    node_t * node = searchPipe(&prev, fd);
 
-    semWait(pipe->sem);
+    semWait(node->pipe->sem);
 
-    char c = pipe->buffer[pipe->current-- % PIPE_MAX_SIZE];
+    char c = node->pipe->buffer[node->pipe->current-- % PIPE_MAX_SIZE];
 
-    semPost(pipe->sem);
+    semPost(node->pipe->sem);
 
     return c;
 }
 
-void closePipe(pipe_t * pipe) {
+void closePipe(int fd) {
     node_t * prev = NULL;
-    node_t * del = search(&prev, pipe);
+    node_t * del = searchPipe(&prev, fd);
     if (del == NULL)
         return;
 
-    semWait(pipe->sem);
+    semWait(del->pipe->sem);
     if (prev != NULL)
         prev->next = del->next;
-    else first->next = del->next;
+    else firstPipe->next = del->next;
 
-    vPortFree(pipe);
+    vPortFree(del->pipe);
     vPortFree(del);
     
-    semPost(pipe->sem);
+    semPost(del->pipe->sem);
 }
 
-int exists(pipe_t * pipe) {
-    node_t * prev = NULL;
-    return search(&prev, pipe) != NULL;
-}
-
-node_t * search(node_t ** previous, pipe_t * pipe) {
-    node_t * curr = first;
+node_t * searchPipe(node_t ** previous, int fd) {
+    node_t * curr = firstPipe;
     * previous = NULL;
     while (curr != NULL) {
-        if (curr->pipe == pipe) {
+        if (curr->pipe->fd == fd) {
             break;
         }
         * previous = curr;
@@ -103,7 +69,7 @@ node_t * search(node_t ** previous, pipe_t * pipe) {
         * previous = NULL;
         return NULL;
     }
-    if (curr == first) {
+    if (curr == firstPipe) {
         * previous = NULL;
         return curr;
     }
