@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void initScheduler();
-void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]);
+void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
 char block(int pid);
 char unblock(int pid);
 char kill(int pid);

@@ -1,6 +1,6 @@
 #ifndef CLEAR_LIB
 #define CLEAR_LIB
 
-void clear();
+void clear(int argc, char *argv[]);
 
 #endif

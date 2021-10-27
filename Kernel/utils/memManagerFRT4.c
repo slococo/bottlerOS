@@ -199,14 +199,14 @@ void *pvReturn = NULL;
 			}
 					else {
 
-							ncNewline();
+							// ncNewline();
 				// ncPrint("MALLOC: ");
 				// ncPrintDec(xFreeBytesRemaining);
 				// ncPrint(" ");
 				// ncPrintDec(xWantedSize);
 				// ncPrint(" ");
 				// ncPrintDec(configADJUSTED_HEAP_SIZE);
-							ncNewline();
+							// ncNewline();
 					}
 		}
 

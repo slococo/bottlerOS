@@ -28,6 +28,15 @@ int strcmp(const char * s1, const char * s2) {
     return *s1 - *s2;
 }
 
+char * strcat(char * dest, const char * src) {
+    char * rdest = dest;
+
+    while (*dest)
+      dest++;
+    while (*dest++ = *src++);
+    return rdest;
+}
+
 void putChar(char c){
     char buffer = c;
     sys_write(1, &buffer, 0);

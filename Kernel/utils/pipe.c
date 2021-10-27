@@ -4,14 +4,19 @@ int fds = 2;
 
 node_t * firstPipe;
 
-pipe_t * openPipe(char * name) {
+char openPipe(int fds[2] ,char * name) {
     pipe_t * pipe = pvPortMalloc(sizeof(pipe_t));
     strcpy(pipe->name, name);
-    pipe->fd = fds++;
+    
     if ((pipe->sem = semOpen(SEM_NAME, 1)) == NULL)
-        return NULL;
+        return EXIT_FAILURE;
 
-    return pipe;
+    pipe->fd[0] = fds++;
+    pipe->fd[1] = fds++;
+    fds[0] = pipe->fd[0];
+    fds[1] = pipe->fd[1];
+
+    return EXIT_SUCCESS;
 }
 
 void writePipe(int fd, char c) {
@@ -47,7 +52,7 @@ void closePipe(int fd) {
     semWait(del->pipe->sem);
     if (prev != NULL)
         prev->next = del->next;
-    else firstPipe->next = del->next;
+    else firstPipe = del->next;
 
     vPortFree(del->pipe);
     vPortFree(del);
@@ -68,10 +73,6 @@ node_t * searchPipe(node_t ** previous, int fd) {
     if (curr == NULL) {
         * previous = NULL;
         return NULL;
-    }
-    if (curr == firstPipe) {
-        * previous = NULL;
-        return curr;
     }
     return curr;
 }

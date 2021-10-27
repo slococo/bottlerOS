@@ -2,6 +2,7 @@
 #include "shell.h"
 #include "clear.h"
 
-void clear() {
+void clear(int argc, char *argv[]) {
     winClear();
+    sys_exit();
 }

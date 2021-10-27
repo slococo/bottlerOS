@@ -2,8 +2,14 @@
 #include "quadratic.h"
 #include "shell.h"
 
-void quadratic(double a, double b, double c) {
-    double sol1, sol2;
+// void quadratic(double a, double b, double c) {
+void quadratic(int argc, char *argv[]) {
+    if (argc != 4) {
+        printStringLen("quadratic receives 3 doubles\n", 30);
+        return;
+    }
+    
+    double sol1, sol2, a = atof(argv[1]), b = atof(argv[2]), c = atof(argv[3]);
     if (a == 0) {
         printStringLen("First argument cannot be 0\n", 28);
         return;

@@ -100,11 +100,12 @@ static const int len = 16;
 int (* checks[])() = {check_cpuid, check_mmx, check_sse, check_sse2, check_sse3, check_sse41, check_sse42, check_aes, check_pclmulqdq, check_avx, check_vaesni, check_vpclmulqdq, check_f16c, check_fma, check_avx2, check_fpu};
 char * supports[] = {"cpuid_support", "mx_support", "sse_support", "sse2_support", "sse3_support", "sse41_support", "sse42_support", "aes_support", "pclmulqdq_support", "avx_support", "vaesni_support", "vpclmulqdq_support", "f16c_support", "fma_support", "avx2_support", "fpu_support"};
 
-void cpufeatures() {
+void cpufeatures(int argc, char *argv[]) {
     for (int i = 0; i < len; i++) {
         if (checks[i]()) {
             printString(supports[i]);
 	        new_line();
         }
     }
+    sys_exit();
 }

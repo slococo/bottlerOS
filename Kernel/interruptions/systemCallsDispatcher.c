@@ -5,9 +5,10 @@
 void exitProcess();
 // void setFn(uint64_t, uint64_t, uint64_t);
 char * processes();
-void enqueueProcess(uint64_t, uint64_t, uint64_t, uint64_t);
+void enqueueProcess(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+char openPipe(int *, char *);
 
-uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9) {
 	switch (rdi) {
 		case 0:
             return write(rsi, rdx, rcx);
@@ -17,7 +18,7 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             return getTime(rsi, rdx, rcx);
         case 3:
             // createProcess(rsi);
-            enqueueProcess(rsi, rdx, rcx, r8);
+            enqueueProcess(rsi, rdx, rcx, r8, r9);
             break;
         case 4:
             exitProcess();
@@ -34,6 +35,8 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
         case 9:
             vPortFree(rsi);
             break;
+        case 10:
+            return (uint64_t) openPipe(rsi, rdx);
         default:
             return -1;
 	}

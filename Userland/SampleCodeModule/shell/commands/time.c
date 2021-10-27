@@ -35,7 +35,7 @@ void printTime(int number) {
     printString(buffer);
 }
 
-void time(char * window, int * offset) {
+void time(int argc, char *argv[]) {
     printTime(getDay());
     putChar('/');
     printTime(getMonth());

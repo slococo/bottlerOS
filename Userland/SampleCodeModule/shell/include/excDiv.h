@@ -1,6 +1,6 @@
 #ifndef EXCDIV_LIB
 #define EXCDIV_LIB
 
-void excdiv();
+void excdiv(int argc, char *argv[]);
 
 #endif

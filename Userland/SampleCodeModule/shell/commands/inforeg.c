@@ -10,7 +10,7 @@ static char * regsNames[] = {
 	"R8: ", "R9: ", "R10: ", "R11: ", "R12: ", "R13: ", "R14: ", "R15: ",
 	"RSP: ", "RIP: "};
 
-void inforeg() {
+void inforeg(int argc, char *argv[]) {
 	uint64_t * regs = (uint64_t *) _getRegs();
 
 	char bufferAux[20];
@@ -25,4 +25,5 @@ void inforeg() {
 			printStringLen(" - ", 3);
 	}
 	new_line();
+	sys_exit();
 }

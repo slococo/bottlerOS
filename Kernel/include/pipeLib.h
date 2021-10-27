@@ -7,7 +7,7 @@
 #define PIPE_MAX_SIZE 1024
 
 typedef struct pipe_t {
-    int fd;
+    int fd[2];
     char buffer[PIPE_MAX_SIZE];
     int current;
     char name[MAX_NAME];
@@ -19,7 +19,7 @@ typedef struct node_t {
     struct node_t * next;
 } node_t;
 
-pipe_t * openPipe(char * name);
+char openPipe(int * fds, char * name);
 void writePipe(int fd, char c);
 char readPipe(int fd);
 

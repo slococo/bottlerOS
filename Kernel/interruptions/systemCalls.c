@@ -15,12 +15,11 @@
 
 uint64_t write(uint64_t fd, uint64_t buffer, uint64_t length) {
     char * bufferAux = (char *) buffer;
-    int color;
+    int color = STDOUT_COLOR;
 
-    if (fd == STDOUT)
-        color = STDOUT_COLOR;
-    else {
-        fd = getFdOut();
+    fd = getFdOut();
+
+    if (fd != STDOUT) {
         int i = 0;
 	    while (bufferAux[i] != '\0' && i++ <= length) {
             writePipe(fd, bufferAux[i]);
@@ -35,6 +34,7 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
     char * bufferAux = (char *) buffer;
     int readBytes = 0;
 
+    fd = getFdIn();
 
     if (fd == STDIN) {
         while (length-- > 0) {

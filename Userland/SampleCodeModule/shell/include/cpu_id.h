@@ -71,7 +71,7 @@ enum {
 
 };
 
-void cpufeatures();
+void cpufeatures(int argc, char *argv[]);
 int cpu_id_support(void);
 
 #endif

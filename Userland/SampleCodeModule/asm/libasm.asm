@@ -3,7 +3,7 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
-GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem
+GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe
 
 section .text
 
@@ -47,6 +47,27 @@ sys_read:
 	int 80h
 
 	pop rcx
+	pop rdx
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_openPipe:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+	push rdx
+
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 10
+	int 80h
+
 	pop rdx
 	pop rsi
 	pop rdi
@@ -274,7 +295,9 @@ sys_loadProcess:
 	push rdx
 	push rcx
 	push r8
+	push r9
 
+	mov r9, r8
 	mov r8, rcx
 	mov rcx, rdx
 	mov rdx, rsi
@@ -282,6 +305,7 @@ sys_loadProcess:
 	mov rdi, 3
     int 80h
 
+	pop r9
 	pop r8
 	pop rcx
 	pop rdx

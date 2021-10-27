@@ -18,8 +18,8 @@ typedef struct processCDT {
     char foreground;
     enum states state;
     int * fd;
-    void * sseBytes;
-    void * fpuBytes;
+    // void * sseBytes;
+    // void * fpuBytes;
 } processCDT;
 
 processCDT * firstReady = NULL;
@@ -61,7 +61,7 @@ void idle() {
 
 void initScheduler() {
     char * argv[] = {"Idle"};
-    enqueueProcess(idle, 0, 1, argv);
+    enqueueProcess(idle, 0, 1, argv, NULL);
 }
 
 // void setFn(void (*fn) (int, char **), int argc, char *argv[]) {
@@ -69,8 +69,14 @@ void initScheduler() {
     // _initialize_stack_frame(fn, currentProcess->rbp, argc, argv);
 // }
 
-void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
-// void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd[2]) {
+// void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
+void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd) {
+    if (fd == NULL) {
+        int * aux = pvPortMalloc(2);
+        aux[0] = 0;
+        aux[1] = 1;
+        fd = aux;
+    }
     if (firstReady != NULL && firstReady->pid == IDLE_PID)
         block(IDLE_PID);
 
@@ -81,7 +87,6 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     
     char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
 
-    // newProcess(process, argv[0], priority, foreground, (uint64_t) rsp, (uint64_t) rbp);
     // char aux[MAX_NAME_SIZE];
     char * aux = pvPortMalloc(10);
     int j;
@@ -99,6 +104,7 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     process->executions = 0;
     process->foreground = foreground;
     process->state = READY;
+    process->fd = fd;
     // process->sseBytes = pvPortMalloc(64);
     // process->fpuBytes = pvPortMalloc(14);
 
@@ -111,48 +117,19 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
         lastReady->next = process;
     lastReady = process;
         
-    // ncClear();
-    // ncPrint(argv[0]);
-    // // proc->name = argv[0];
-    // ncPrint(process->name);
-    // ncPrintDec(process->pid);
-    // ncPrintHex(process->rsp);
-    // ncPrintHex(process->rbp);
-    // wait(3);
     return;
 }
 
-void * getSSEaddress() {
-    return currentProcess->sseBytes;
-}
+// void * getSSEaddress() {
+//     return currentProcess->sseBytes;
+// }
 
-void * getFPUaddress() {
-    return currentProcess->fpuBytes;
-}
+// void * getFPUaddress() {
+//     return currentProcess->fpuBytes;
+// }
 
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp) {
-    // char aux[MAX_NAME_SIZE];
-    // int j;
-    // for (j = 0; j < MAX_NAME_SIZE - 1 && name[j] != 0; j++) {
-    //     aux[j] = name[j];
-    // }
-    // aux[j] = '\0';
-
-    // process->name = aux;
-    // process->pid = pids++;
-    // process->ppid = currentProcess->pid;
-    // process->priority = priority;
-    // process->rsp = rsp;
-    // process->rbp = rbp;
-    // process->executions = 0;
-    // process->foreground = foreground;
-    // process->state = READY;
 }
-
-// void loader(int argc, char * argv[], void (*fn) (int, char **)) {
-//     fn(argc, argv);
-//     exit();
-// }
 
 processADT searchProcess(processADT * previous, int pid, processADT first) {
     processADT curr = first;
@@ -167,10 +144,6 @@ processADT searchProcess(processADT * previous, int pid, processADT first) {
     if (curr == NULL) {
         * previous = NULL;
         return NULL;
-    }
-    if (curr == first) {
-        * previous = NULL;
-        return curr;
     }
     return curr;
 }
@@ -263,13 +236,13 @@ char kill(int pid) {
 
 int getFdOut() {
     if (currentProcess == NULL)
-        return NULL;
+        return EXIT_FAILURE;
     return currentProcess->fd[1];
 }
 
 int getFdIn() {
     if (currentProcess == NULL)
-        return NULL;
+        return EXIT_FAILURE;
     return currentProcess->fd[0];
 }
 

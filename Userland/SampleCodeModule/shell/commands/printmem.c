@@ -13,10 +13,16 @@ void getMem(int * buffer, int initialAddress) {
     }
 }
 
-void printmem(long dir) {
+// void printmem(long dir) {
+void printmem(int argc, char *argv[]) {
+	if (argc != 2) {
+		printStringLen("printmem receives a memory position\n", 37);
+		return;
+	}
+
 	int buffer[8];
 	
-	getMem(buffer, dir);
+	getMem(buffer, atoi(argv[1], strlen(argv[1])));
 	
 	for (int i = 0; i < 8; i++) {
 		char bufferAux[8];

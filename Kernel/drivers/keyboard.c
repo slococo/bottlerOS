@@ -72,7 +72,7 @@ void testKeyboardInterrupt(unsigned char c) {
 unsigned char getKeyFromBuffer() {
 	if (current - buffer == SIZE) {
 		current = buffer;
-    }
+  }
 
 	char aux = *current;
     *current++ = 0;
@@ -212,7 +212,7 @@ static unsigned char kbdus_sh[250] =
     0,          /* 29   - Control */
   'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', /* 39 */
  '\'', '>',   0,        /* Left shift */
- '*', 'Z', 'X', 'C', 'V', 'B', 'N',            /* 49 */
+ '|', 'Z', 'X', 'C', 'V', 'B', 'N',            /* 49 */
   'M', ';', ':', '_',   0,              /* Right shift */
   '*',
     0,	/* Alt */

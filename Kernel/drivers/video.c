@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include "video.h"
 
-static uint8_t * const video = (uint8_t*) 0xB8000;
-static uint8_t * currentVideo = (uint8_t*) 0xB8000;
+static uint8_t * const video = (uint8_t *) 0xB8000;
+static uint8_t * currentVideo = (uint8_t *) 0xB8000;
 static const int width = 80;
 static const int height = 25;
 static int currentX = 0;
@@ -13,23 +13,16 @@ int limitY[2] = {0, 25};
 
 void increment() {
 	currentX++;
-	if (currentX >= limitX[1]) {
+	if (currentX == limitX[1]) {
 		currentY++;
 		currentX = limitX[0];
-		if (currentY >= limitY[1]) 
-			currentY = limitY[0];
+		if (currentY >= limitY[1]) {
+			scroll();
+			currentY = limitY[1] - 1;
+		}
 	}
 }
 
-int atoi(char * string, int length) {
-    int res = 0, i = 0;
-    while (i < length) {
-        res = res * 10 + string[i++] - '0';
-    }
-    return res;
-}
-
-// "\e\f" para clear
 char checkIfEscapeSequence(const char * bufferAux) {
 	if (*bufferAux == '\e') {
 		bufferAux++;
@@ -42,21 +35,24 @@ char checkIfEscapeSequence(const char * bufferAux) {
 	return 0;
 }
 
+void scroll() {
+	for (int i = limitY[0]; i < limitY[1] - 1; i++) {
+		for (int j = limitX[0]; j < limitX[1]; j++) {
+			*(video + i * width * 2 + j * 2) = *(video + (i + 1) * width * 2 + j * 2);
+			*(video + i * width * 2 + j * 2 + 1) = *(video + (i + 1) * width * 2 + j * 2 + 1);
+		}
+	}
+	for (int j = limitX[0]; j < limitX[1]; j++) {
+		*(video + (limitY[1] - 1) * width * 2 + j * 2) = ' ';
+	}
+}
+
 int printStringLen(int color, const char * string, int maxLen) {
 	int i = 0;
 	
 	while (*string != '\0' && i <= maxLen) {
-		if (currentX >= limitX[1]) {
-			currentX = limitX[0];
-			currentY++;
-		}
-		if (currentY >= limitY[1]) {
-			currentY = limitY[0];
-		}
-
 		if (*string == '\n') {
 			new_line();
-			// return i;
 			string++;
 			i++;
 			continue;
@@ -93,15 +89,18 @@ void backspace() {
 void new_line() {
 	currentX = limitX[0];
 	currentY++;
-	if (currentY == limitY[1])
-		currentY = limitY[0];
+	if (currentY == limitY[1]) {
+		scroll();
+		currentY = limitY[1] - 1;
+	}
 }
 
 void clear() {
-	for (int i = limitX[0]; i < (limitX[1] - limitX[0]) * 2 * (limitY[1] - limitY[0]); i++) {	
-		printStringLen(15, " ", 1);
-	}
-
 	currentX = limitX[0];
 	currentY = limitY[0];
+	for (int i = limitY[0]; i < limitY[1]; i++) {
+		for (int j = limitX[0]; j < limitX[1]; j++) {
+			*(video + i * width * 2 + j * 2) = ' ';
+		}
+	}
 }

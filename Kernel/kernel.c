@@ -141,7 +141,7 @@ void test_mm(){
   } 
 }
 
-void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]);
+void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
 void initScheduler();
 
 void _cli();
@@ -177,7 +177,7 @@ int main() {
 
 	// ((EntryPoint)sampleCodeModuleAddress)();
     char * argv[] = {"SampleCode"};
-    enqueueProcess(sampleCodeModuleAddress, 1, 1, argv);
+    enqueueProcess(sampleCodeModuleAddress, 1, 1, argv, NULL);
 	clear();
 	// haltcpu();
 	_sti();

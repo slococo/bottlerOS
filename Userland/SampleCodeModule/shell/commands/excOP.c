@@ -2,6 +2,6 @@
 
 void raiseOpcodeExc();
 
-void excop() {
+void excop(int argc, char *argv[]) {
     raiseOpcodeExc();
 }

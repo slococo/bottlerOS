@@ -10,5 +10,6 @@ void backspace();
 void clear();
 void increment();
 void changeWindow();
+void scroll();
 
 #endif

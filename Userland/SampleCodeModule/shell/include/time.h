@@ -7,7 +7,7 @@ int getHours();
 int getDays();
 int getMonths();
 int getYears();
-void time();
+void time(int argc, char *argv[]);
 
 #define SECONDS 0
 #define MINUTES 2
