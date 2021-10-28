@@ -171,12 +171,15 @@ picSlaveMask:
 _irq00Handler:
 	pushState
 
-	; mov rsi, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; fsave [rsp]
-	; push rsi
-	
+	mov rsi, rsp
+	and rsp, -16
+	sub rsp, 108
+	fsave [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxsave [rsp]
+	push rsi
+
 	; push rax
 	; call getFPUaddress
 	; fsave [rax]
@@ -207,12 +210,15 @@ _irq00Handler:
 	; fxrstor [rax]
 	; pop rax
 	
-	; mov rax, rsp
-	; pop rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; frstor [rsp]
-	; mov rsp, rax
+	pop rsp
+	mov rax, rsp
+	and rsp, -16
+	sub rsp, 108
+	frstor [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxrstor [rsp]
+	mov rsp, rax
 
 	popState
 	iretq
@@ -300,19 +306,25 @@ _initialize_stack_frame:
 
     pushState
 
-	; mov rsi, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; fsave [rsp]
-	; push rsi
+	mov rsi, rsp
+	and rsp, -16
+	sub rsp, 108
+	fsave [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxsave [rsp]
+	push rsi
+	mov rax, rsp
 
 	; fsave [bytesForFPU]
-	; push rax
-	; mov dword [auxi], 1
-	; call getFPUaddress
-	; call getSSEaddress
-	; pop rax
 	; fxsave [bytesForSSEAligned]
+
+	; push rax
+	; call getFPUaddress
+	; fsave [rax]
+	; call getSSEaddress
+	; fxsave [rax]
+	; pop rax
 
 	; fsave [r8]
 	; fxsave [r9]

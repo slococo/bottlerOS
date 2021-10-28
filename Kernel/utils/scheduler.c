@@ -2,9 +2,22 @@
 #define IDLE_PID 1
 
 // void _initialize_stack_frame(void *, void *, int, char**, void **, void **);
-void _initialize_stack_frame(void *, void *, int, char**);
+// void _initialize_stack_frame(void *, void *, int, char**, void *, void *);
+uint64_t * _initialize_stack_frame(void *, void *, int, char**);
 
 enum states {READY = 0, BLOCKED};
+
+// typedef long Align;
+
+// union header {
+//   struct {
+//     void * fpuBytes;
+//     void * sseBytes;
+//   } s;
+//   Align x;
+// };
+
+// typedef union header Header;
 
 typedef struct processCDT {
     struct processCDT * next;
@@ -18,11 +31,11 @@ typedef struct processCDT {
     char foreground;
     enum states state;
     int * fd;
+    // Header * bytes;
+    // Header * sse;
     // void * sseBytes;
     // void * fpuBytes;
 } processCDT;
-
-// typedef long Align;
 
 // typedef union processCDT {
 //  struct {
@@ -104,7 +117,7 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     processADT process = pvPortMalloc(sizeof(processCDT));
     uint64_t * auxi = pvPortMalloc(STACK_SIZE);
     uint64_t * rbp = STACK_SIZE + auxi;
-    uint64_t * rsp = rbp - 20; //22
+    uint64_t * rsp = rbp - 20; // 20 //22
     
     char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
 
@@ -127,11 +140,15 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     process->state = READY;
     process->fd = fd;
     process->next = NULL;
+    // process->bytes->s.fpuBytes = pvPortMalloc(108);
+    // process->bytes->s.sseBytes = pvPortMalloc(512);
     // process->sseBytes = pvPortMalloc(64);
     // process->fpuBytes = pvPortMalloc(14);
 
     // _initialize_stack_frame(fn, rbp, argc, argv, &(process->fpuBytes), &(process->sseBytes));
-    _initialize_stack_frame(fn, rbp, argc, argv);
+    // _initialize_stack_frame(fn, rbp, argc, argv, &(process->bytes->s.sseBytes), &(process->bytes->s.fpuBytes));
+    // _initialize_stack_frame(fn, rbp, argc, argv, process->bytes->s.sseBytes, process->bytes->s.fpuBytes);
+    process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
 
     if (firstReady == NULL)
         firstReady = process;
@@ -143,11 +160,13 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
 }
 
 // void * getSSEaddress() {
-//     return currentProcess->sseBytes;
+// //     return currentProcess->sseBytes;
+//     return currentProcess->bytes->s.sseBytes;
 // }
 
 // void * getFPUaddress() {
-//     return currentProcess->fpuBytes;
+//     // return currentProcess->fpuBytes;
+//     return currentProcess->bytes->s.fpuBytes;
 // }
 
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp) {
