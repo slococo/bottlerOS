@@ -47,4 +47,5 @@ void time(int argc, char *argv[]) {
     printTime(getMinutes());
     putChar(':');
     printTime(getSeconds());
+    sys_exit();
 }

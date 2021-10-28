@@ -9,7 +9,7 @@ char block(int pid);
 char unblock(int pid);
 char kill(int pid);
 void exitProcess();
-char nice(char offset);
+char nice(int pid, char offset);
 int getPid();
 char quitCPU();
 char * processes();

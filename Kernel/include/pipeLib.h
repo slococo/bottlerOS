@@ -8,9 +8,10 @@
 
 typedef struct pipe_t {
     int fd[2];
-    char buffer[PIPE_MAX_SIZE];
-    int current;
-    char name[MAX_NAME];
+    char * buffer;
+    int currentR;
+    int currentW;
+    char * name;
     sem_t * sem;
 } pipe_t;
 

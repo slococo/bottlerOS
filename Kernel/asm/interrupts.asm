@@ -170,6 +170,13 @@ picSlaveMask:
 ;8254 Timer (Timer Tick)
 _irq00Handler:
 	pushState
+
+	; mov rsi, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; fsave [rsp]
+	; push rsi
+	
 	; push rax
 	; call getFPUaddress
 	; fsave [rax]
@@ -199,6 +206,14 @@ _irq00Handler:
 	; call getSSEaddress
 	; fxrstor [rax]
 	; pop rax
+	
+	; mov rax, rsp
+	; pop rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; frstor [rsp]
+	; mov rsp, rax
+
 	popState
 	iretq
 
@@ -284,6 +299,13 @@ _initialize_stack_frame:
 	mov rdi, rdx 
 
     pushState
+
+	; mov rsi, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; fsave [rsp]
+	; push rsi
+
 	; fsave [bytesForFPU]
 	; push rax
 	; mov dword [auxi], 1

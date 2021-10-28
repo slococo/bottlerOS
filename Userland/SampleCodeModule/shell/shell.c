@@ -15,6 +15,7 @@
 #include "cat.h"
 #include "semCom.h"
 #include "stddef.h"
+#include "nice.h"
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
@@ -30,7 +31,7 @@ typedef struct cmd_t {
     char isBuiltIn;
 } cmd_t;
 
-const int len = 14;
+const int len = 15;
 cmd_t commands[] = {
     { "help", help, 1 },
     { "cat", cat, 0 },
@@ -41,6 +42,7 @@ cmd_t commands[] = {
     { "filter", filter, 0 },
     { "clear", clear, 1 },
     { "cpufeatures", cpufeatures, 1 },
+    { "nice", nice, 0 },
     { "ps", ps, 1 },
     { "sem", sem, 1 },
     { "quadratic", quadratic, 0 },
@@ -82,34 +84,45 @@ void processInput(char * input) {
             break;
         }
     }
-    int fd[2];
+
+    int * fd, * fd1, * fd2;
+    fd1 = sys_malloc(2 * sizeof(int));
+    fd1[0] = 0;
+    fd1[1] = 1;
+
     if (pipe != -1) {
+        fd = sys_malloc(2 * sizeof(int));
         if (sys_openPipe(fd, "pipe"))
             return;
-            // return EXIT_FAILURE;
+        fd2 = sys_malloc(2 * sizeof(int));
+
+        fd1[0] = 0;
+        fd1[1] = fd[1];
+        fd2[0] = fd[0];
+        fd2[1] = 1;
     }
     char ** argv0 = NULL;
     char ** argv1 = NULL;
+    int comm0 = -1;
+    int comm1 = -1;
+
     if (pipe != -1) {
         argv0 = sys_malloc(sizeof(char *) * pipe);
         for (int i = 0; i < pipe; i++)
             argv0[i] = tokens[i];
         argv1 = sys_malloc(sizeof(char *) * (end - pipe - 1));
-        for (int i = pipe + 1; i < end - pipe - 1; i++)
-            argv1[i] = tokens[i];
+        for (int i = pipe + 1; i < end; i++)
+            argv1[i - pipe - 1] = tokens[i];
     }
     else {
-        *argv0 = sys_malloc(sizeof(char *) * end);
+        argv0 = sys_malloc(sizeof(char *) * end);
         for (int i = 0; i < end; i++)
             argv0[i] = tokens[i];
     }
     for (int i = 0; i < len; i++) {
         if (!strcmp(tokens[0], commands[i].name)) {
             comm_flag0 = 1;
-            if (pipe != -1)
-                sys_loadProcess(commands[i].func, 1, pipe, argv0, fd);
-            else 
-                sys_loadProcess(commands[i].func, 1, end, argv0, NULL);
+            comm0 = i;
             break;
         }
     }
@@ -117,10 +130,18 @@ void processInput(char * input) {
         for (int i = 0; i < len; i++) {
             if (!strcmp(tokens[pipe + 1], commands[i].name)) {
                 comm_flag1 = 1;
-                sys_loadProcess(commands[i].func, 1, end - pipe - 1, argv1, fd);
+                comm1 = i;
                 break;
             }
         }
+    }
+
+    if (comm_flag0 && (comm_flag1 || pipe == -1)) {
+        if (pipe != -1) {
+            sys_loadProcess(commands[comm0].func, 1, pipe, argv0, fd1);
+            sys_loadProcess(commands[comm1].func, 1, end - pipe - 1, argv1, fd2);
+        }
+        else sys_loadProcess(commands[comm0].func, 1, end, argv0, fd1);
     }
 
     if (!comm_flag0) {

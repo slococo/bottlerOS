@@ -10,14 +10,15 @@ typedef struct pid_t {
 
 typedef struct sem_t {
     unsigned int value;
-    char name[MAX_NAME];
+    // char name[MAX_NAME];
+    char * name;
     pid_t * entering;
     pid_t * last;
 } sem_t;
 
 sem_t * semOpen(char * name, unsigned int value);
-int semClose(sem_t * sem);
-int semWait(sem_t * sem);
-int semPost(sem_t * sem);
+char semClose(sem_t * sem);
+void semWait(sem_t * sem);
+void semPost(sem_t * sem);
 
 #endif

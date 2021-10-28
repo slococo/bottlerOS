@@ -30,4 +30,5 @@ void printmem(int argc, char *argv[]) {
 		printString(itoa(buffer[i], bufferAux, 16));
 		new_line();
 	}
+    sys_exit();
 }

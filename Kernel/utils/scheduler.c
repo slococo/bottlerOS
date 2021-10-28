@@ -22,6 +22,27 @@ typedef struct processCDT {
     // void * fpuBytes;
 } processCDT;
 
+// typedef long Align;
+
+// typedef union processCDT {
+//  struct {
+//     struct p * next;
+//     char * name;
+//     int pid;
+//     int ppid;
+//     uint64_t rsp;
+//     uint64_t rbp;
+//     char priority;
+//     char executions;
+//     char foreground;
+//     enum states state;
+//     int * fd;
+//     void * sseBytes;
+//     void * fpuBytes;
+//  } p;
+//  Align x;
+// } processCDT;
+
 processCDT * firstReady = NULL;
 processCDT * lastReady = NULL;
 processCDT * firstBlocked = NULL;
@@ -72,7 +93,7 @@ void initScheduler() {
 // void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
 void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd) {
     if (fd == NULL) {
-        int * aux = pvPortMalloc(2);
+        int * aux = pvPortMalloc(2 * sizeof(int));
         aux[0] = 0;
         aux[1] = 1;
         fd = aux;
@@ -105,6 +126,7 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     process->foreground = foreground;
     process->state = READY;
     process->fd = fd;
+    process->next = NULL;
     // process->sseBytes = pvPortMalloc(64);
     // process->fpuBytes = pvPortMalloc(14);
 
@@ -207,21 +229,28 @@ char kill(int pid) {
         if (del == NULL)
             return EXIT_FAILURE;
         else {
-            if (prev != NULL)
+            if (prev != NULL) {
                 prev->next = del->next;
+                if (del == lastBlocked)
+                    lastBlocked = prev;
+            }
             else
                 firstBlocked = del->next;
         }
     }
     else {
-        if (prev != NULL)
+        if (prev != NULL) {
             prev->next = del->next;
+            if (del == lastReady)
+                lastReady = prev;
+        }
         else
             firstReady = del->next;
     }
 
     processCDT * next = del->next;
 
+    vPortFree(del->fd);
     vPortFree((void *) del->rbp - STACK_SIZE);
     vPortFree((void *) del);
 
@@ -250,10 +279,22 @@ void exitProcess() {
     kill(currentProcess->pid);
 }
 
-char nice(char offset) {
-    if (currentProcess == NULL)
+char nice(int pid, char offset) {
+    if (offset >= 20 || offset < -20)
         return EXIT_FAILURE;
-    currentProcess->priority += offset;
+
+    processADT prev = NULL;
+    processADT del = searchProcess(&prev, pid, firstReady);
+    if (del == NULL) {
+        del = searchProcess(&prev, pid, firstBlocked);
+        if (del == NULL)
+            return EXIT_FAILURE;
+        else 
+            del->priority = offset + 20;
+    }
+    else {
+        del->priority = offset + 20;
+    }
     return EXIT_SUCCESS;
 }
 
@@ -280,7 +321,7 @@ char quitCPU() {
     return EXIT_SUCCESS;
 }
 
-char getGenProcessData(char ** out, char * written, char toAdd, char * in, char isLast) {
+void getGenProcessData(char ** out, char * written, char toAdd, char * in, char isLast) {
     char copied = strcpy(*out, in);
     *out += copied;
     *out += addSpaces(*out, toAdd - copied);
@@ -313,44 +354,10 @@ char getProcessData(char * out, processCDT * proc) {
     
     char buffer[10];
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->pid, buffer, 10, 10), 0);
-    // char copied = strcpy(out, itoa(proc->pid, buffer, 10, 10));
-    // out += copied;
-    // out += addSpaces(out, MAX_ATTR_SIZE - copied);
-    // written += MAX_ATTR_SIZE;
-    // out += addSpaces(out, 2);
-    // written += 2;
-
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->priority, buffer, 10, 2), 0);
-    // copied = strcpy(out, itoa(proc->priority, buffer, 10, 2));
-    // out += copied;
-    // out += addSpaces(out, MAX_ATTR_SIZE - copied);
-    // written += MAX_ATTR_SIZE;
-    // out += addSpaces(out, 2);
-    // written += 2;
-
     getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rsp, buffer, 16, 10), 0);
-    // copied = strcpy(out, itoa(proc->rsp, buffer, 16, 10));
-    // out += copied;
-    // out += addSpaces(out, MAX_NAME_SIZE - copied);
-    // written += MAX_NAME_SIZE;
-    // out += addSpaces(out, 2);
-    // written += 2;
-
     getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rbp, buffer, 16, 10), 0);
-    // copied = strcpy(out, itoa(proc->rbp, buffer, 16, 10));
-    // out += copied;
-    // out += addSpaces(out, MAX_NAME_SIZE - copied);
-    // written += MAX_NAME_SIZE;
-    // out += addSpaces(out, 2);
-    // written += 2;
-
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, (proc->foreground == 1) ? "F" : "B", 1);
-    // *out++ = (proc->foreground == 1) ? 'F' : 'B';
-    // out += addSpaces(out, MAX_ATTR_SIZE - 1);
-    // written += MAX_ATTR_SIZE;
-
-    // out += addSpaces(out, 2);
-    // written += 2;
     
     return written;
 }
@@ -382,14 +389,3 @@ char * processes(){
 
     return ret;
 }
-
-/*
-● Crear un proceso. DEBERÁ soportar el pasaje de parámetros. LISTO
-● Obtener el ID del proceso que llama. LISTO
-● Listar todos los procesos: nombre, ID, prioridad, stack y base pointer, foreground y
-cualquier otra variable que consideren necesaria. LISTO
-● Matar un proceso arbitrario. LISTO
-● Modificar la prioridad de un proceso arbitrario.  LISTO
-● Bloquear y desbloquear un proceso arbitrario. LISTO
-● Renunciar al CPU. LISTO
-*/

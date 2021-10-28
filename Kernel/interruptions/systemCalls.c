@@ -21,8 +21,8 @@ uint64_t write(uint64_t fd, uint64_t buffer, uint64_t length) {
 
     if (fd != STDOUT) {
         int i = 0;
-	    while (bufferAux[i] != '\0' && i++ <= length) {
-            writePipe(fd, bufferAux[i]);
+	    while (bufferAux[i] != '\0' && i <= length) {
+            writePipe(fd, bufferAux[i++]);
         }
         return i;
     }
@@ -46,8 +46,13 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
         }
     }
     else {
-        fd = getFdIn();
-        readBytes += strcpy(buffer, readPipe(fd));
+        while (length-- > 0) {
+            *bufferAux = readPipe(fd);
+            if (*bufferAux == 0)
+                break;
+            bufferAux++;
+            readBytes++;
+        }
     }
 
 	return readBytes;

@@ -12,5 +12,6 @@ char * sys_sem();
 void * sys_malloc(int);
 void * sys_free(void *);
 void * sys_openPipe(int *, char *);
+char sys_nice(int, char);
 
 #endif

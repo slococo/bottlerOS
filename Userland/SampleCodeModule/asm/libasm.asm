@@ -3,7 +3,7 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
-GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe
+GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_nice
 
 section .text
 
@@ -193,6 +193,27 @@ sys_sem:
 	mov rdi, 7
 	int 80h
 
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_nice:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+	push rdx
+
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 11
+	int 80h
+
+	pop rdx
+	pop rsi
 	pop rdi
 
     mov rsp, rbp

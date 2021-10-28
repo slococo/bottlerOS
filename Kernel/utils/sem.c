@@ -7,7 +7,7 @@ typedef struct node_t {
     struct node_t * next;
 } node_t;
 
-static sem_t semaphores[MAX_SEM];
+// static sem_t semaphores[MAX_SEM];
 node_t * firstSem = NULL;
 static char counter = 0;
 
@@ -19,14 +19,17 @@ sem_t * semOpen(char * name, unsigned int value) {
     node->sem = sem;
     node->next = firstSem;    
     firstSem = node;
+    sem->name = pvPortMalloc(MAX_NAME);
     strcpy(sem->name, name);
     sem->value = value;
     counter++;
 
     leave_region(&semLock);
+
+    return sem;
 }
 
-int semClose(sem_t * sem) {
+char semClose(sem_t * sem) {
     if (sem == NULL)
         return EXIT_FAILURE;
 
@@ -34,7 +37,7 @@ int semClose(sem_t * sem) {
 
     node_t * del = NULL;
 
-    if (firstSem == sem) {
+    if (firstSem->sem == sem) {
         del = firstSem;
         firstSem = firstSem->next;
     }
@@ -62,14 +65,17 @@ int semClose(sem_t * sem) {
         pid = pid->next;
         vPortFree(aux);
     }
+    vPortFree(sem->name);
     vPortFree(sem);
     vPortFree(del);
     
     counter--;
     leave_region(&semLock);
+
+    return EXIT_SUCCESS;
 }
 
-int semWait(sem_t * sem) {
+void semWait(sem_t * sem) {
     enter_region(&semLock);
 
     if (sem->value > 0) {
@@ -81,7 +87,10 @@ int semWait(sem_t * sem) {
         pid_t * curr = pvPortMalloc(sizeof(pid_t));
         curr->pid = getPid();
         curr->next = NULL;
-        sem->last->next = curr;
+        if (sem->entering == NULL)
+            sem->entering = curr;
+        if (sem->last != NULL)
+            sem->last->next = curr;
         sem->last = curr;
         block(curr->pid);
 
@@ -92,7 +101,7 @@ int semWait(sem_t * sem) {
     leave_region(&semLock);
 }
 
-int semPost(sem_t * sem) {
+void semPost(sem_t * sem) {
     enter_region(&semLock);
 
     sem->value++;
@@ -151,7 +160,6 @@ char * getSems() {
     
     char * info = "name       value   pidsWaiting\n";
     ans += strcpy(ans, info);
-    // ans += 56;
 
     node_t * aux = firstSem;
     while (aux != NULL) {

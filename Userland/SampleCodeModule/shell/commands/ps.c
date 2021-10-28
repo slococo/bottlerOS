@@ -6,4 +6,5 @@ void ps(int argc, char *argv[]) {
     printString(output);
     new_line();
     sys_free(output);
+    sys_exit();
 }

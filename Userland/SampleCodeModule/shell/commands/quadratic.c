@@ -40,4 +40,5 @@ void quadratic(int argc, char *argv[]) {
 	ftoa(sol2, buffer2, 10);
 	printString(buffer2);
     new_line();
+    sys_exit();
 }

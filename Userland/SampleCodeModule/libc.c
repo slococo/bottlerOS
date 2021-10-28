@@ -141,12 +141,31 @@ char* itoa(int value, char* buffer, int base) {
     return reverse(buffer, 0, i - 1);
 }
 
-int atoi(char * string, int length) {
-    int res = 0, i = 0;
-    while (i < length) {
-        res = res * 10 + string[i++] - '0';
+// int atoi(char * string, int length) {
+//     int res = 0, i = 0;
+//     while (string[i] != 0 && i < length) {
+//         res = res * 10 + string[i++] - '0';
+//     }
+//     return res;
+// }
+
+int atoi(char *str, int length) {
+    int i = 0, sign = 1, val = 0, nbr = 0;
+    while (str[i] != '\0') {
+        if (str[i] == '-') {
+            sign = -sign;
+            str++;
+        }
+        i++;
     }
-    return res;
+    i = 0;
+    while (str[i] >= '0' && str[i] <= '9' && str[i] != '\0') {
+        nbr = (int) (str[i] - '0');
+        val = (val * 10) + nbr;
+        i++;
+    }
+    i++;
+    return (val * sign);
 }
 
 int pow(int base, int exponent) {
