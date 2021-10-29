@@ -28,9 +28,10 @@ EXTERN nextProcess
 GLOBAL switchContext
 GLOBAL loadProcess
 GLOBAL _initialize_stack_frame
-GLOBAL _switchContext
+GLOBAL _switchContext, forceTimerAux
 
 EXTERN getFPUaddress, getSSEaddress
+EXTERN checkSleeping
 
 SECTION .text
 
@@ -109,6 +110,40 @@ SECTION .text
 	iretq
 %endmacro
 
+%macro pushStateNoRax 0
+	push rbx
+	push rcx
+	push rdx
+	push rbp
+	push rdi
+	push rsi
+	push r8
+	push r9
+	push r10
+	push r11
+	push r12
+	push r13
+	push r14
+	push r15
+%endmacro
+
+%macro popStateNoRax 0
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rsi
+	pop rdi
+	pop rbp
+	pop rdx
+	pop rcx
+	pop rbx
+%endmacro
+
 _hlt:
 	sti
 	hlt
@@ -167,18 +202,29 @@ picSlaveMask:
 ; 	pop rcx
 ; 	ret
 
+forceTimerAux:
+	pushStateNoRax
+
+	; call checkSleeping
+
+	call nextProcess
+	mov rsp, rax
+
+	popStateNoRax
+	iretq
+
 ;8254 Timer (Timer Tick)
 _irq00Handler:
 	pushState
 
-	mov rsi, rsp
-	and rsp, -16
-	sub rsp, 108
-	fsave [rsp]
-	and rsp, -16
-	sub rsp, 512
-	fxsave [rsp]
-	push rsi
+	; mov rsi, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; fsave [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxsave [rsp]
+	; push rsi
 
 	; push rax
 	; call getFPUaddress
@@ -189,11 +235,14 @@ _irq00Handler:
 	; fsave [bytesForFPU]
 	; fxsave [bytesForSSEAligned]
 
-	mov rdi, 0
-	call irqDispatcher
+	call checkSleeping
 
 	mov rdi, rsp
 	call updateRSP
+	mov r10, rax
+
+	mov rdi, 0
+	call irqDispatcher
 
 	call nextProcess
 	mov rsp, rax
@@ -209,19 +258,25 @@ _irq00Handler:
 	; call getSSEaddress
 	; fxrstor [rax]
 	; pop rax
+
+	; cmp r10, 0
+	; je .end
 	
-	pop rsp
-	mov rax, rsp
-	and rsp, -16
-	sub rsp, 108
-	frstor [rsp]
-	and rsp, -16
-	sub rsp, 512
-	fxrstor [rsp]
-	mov rsp, rax
+	; pop rsp
+	; mov rax, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; frstor [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxrstor [rsp]
+	; mov rsp, rax
 
 	popState
 	iretq
+; .end:
+; 	popStateNoRax
+; 	iretq
 
 ;Keyboard
 _irq01Handler:
@@ -257,39 +312,6 @@ haltcpu:
 	cli
 	ret
 
-%macro pushStateNoRax 0
-	push rbx
-	push rcx
-	push rdx
-	push rbp
-	push rdi
-	push rsi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
-%endmacro
-
-%macro popStateNoRax 0
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rsi
-	pop rdi
-	pop rbp
-	pop rdx
-	pop rcx
-	pop rbx
-%endmacro
 
 _initialize_stack_frame:
     mov r10, rsp
@@ -306,15 +328,15 @@ _initialize_stack_frame:
 
     pushState
 
-	mov rsi, rsp
-	and rsp, -16
-	sub rsp, 108
-	fsave [rsp]
-	and rsp, -16
-	sub rsp, 512
-	fxsave [rsp]
-	push rsi
-	mov rax, rsp
+	; mov rsi, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; fsave [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxsave [rsp]
+	; push rsi
+	; mov rax, rsp
 
 	; fsave [bytesForFPU]
 	; fxsave [bytesForSSEAligned]
@@ -335,13 +357,39 @@ _initialize_stack_frame:
 ; System calls (int 80h)
 _systemCallsHandler:
 	pushStateNoRax
-	fsave [bytesForFPU]
-	fxsave [bytesForSSEAligned]
+	; fsave [bytesForFPU]
+	; fxsave [bytesForSSEAligned]
+	; mov [auxRSI], rsi
+	; mov rsi, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; fsave [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxsave [rsp]
+	; push rsi
 
+	; mov [auxRDI], rdi
+	; mov rdi, rsp
+	; call updateRSP
+
+	; mov rsi, [auxRSI]
+	; mov rdi, [auxRDI]
 	call systemCallsDispatcher
 
-	fxrstor [bytesForSSEAligned]
-	frstor [bytesForFPU]
+	; fxrstor [bytesForSSEAligned]
+	; frstor [bytesForFPU]
+
+	; pop rsp
+	; mov rax, rsp
+	; and rsp, -16
+	; sub rsp, 108
+	; frstor [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxrstor [rsp]
+	; mov rsp, rax
+
 	popStateNoRax
 	iretq
 
@@ -360,4 +408,6 @@ SECTION .bss
 	; bytesForFPU2 resb 108
 	insPointer resb 8
 	rspPointer resb 8
+	auxRSI resb 8
+	auxRDI resb 8
 	; auxi resb 4

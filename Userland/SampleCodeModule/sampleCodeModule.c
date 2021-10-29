@@ -1,16 +1,21 @@
 /* sampleCodeModule.c */
 #include "libc.h"
 #include "shell/include/shell.h"
+#include "bottler/include/bottler.h"
 #include <stddef.h>
 
-void sys_loadProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
+int sys_loadProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
 void sys_exit();
 // void sys_switchContext();
 
 int main(int argc, char *argv[]) {
     winClear();
 
-    char * argv2[] = {"BottlerSh"};
+    char * argv1[] = {"bottler"};
+    sys_loadProcess(bottler, 1, 1, argv1, NULL);
+    // sys_sleep(4);
+
+    char * argv2[] = {"shell"};
     sys_loadProcess(shell, 1, 1, argv2, NULL);
     // sys_loadProcess(shell);
 

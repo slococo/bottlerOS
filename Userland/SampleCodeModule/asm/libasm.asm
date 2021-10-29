@@ -3,7 +3,8 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
-GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_nice
+GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_semClose
+GLOBAL sys_nice, sys_semWait, sys_semPost, sys_semOpen, sys_sleep, sys_kill, sys_getPid, sys_block, sys_unblock
 
 section .text
 
@@ -81,10 +82,48 @@ sys_exit:
     mov rbp, rsp
 
 	push rdi
+	push rsi
 
 	mov rdi, 4
 	int 80h
 
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_block:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 19
+	int 80h
+
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_unblock:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 20
+	int 80h
+
+	pop rsi
 	pop rdi
 
     mov rsp, rbp
@@ -96,10 +135,13 @@ sys_malloc:
     mov rbp, rsp
 
 	push rdi
+	push rsi
 
+	mov rsi, rdi
 	mov rdi, 8
 	int 80h
 
+	pop rsi
 	pop rdi
 
     mov rsp, rbp
@@ -199,6 +241,21 @@ sys_sem:
     pop rbp
     ret
 
+sys_getPid:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+
+	mov rdi, 17
+	int 80h
+
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
 sys_nice:
     push rbp
     mov rbp, rsp
@@ -213,6 +270,117 @@ sys_nice:
 	int 80h
 
 	pop rdx
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_semOpen:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+	push rdx
+
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 15
+	int 80h
+
+	pop rdx
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_semWait:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 13
+	int 80h
+
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_semPost:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 14
+	int 80h
+
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_semClose:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 18
+	int 80h
+
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_sleep:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 12
+	int 80h
+
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_kill:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 16
+	int 80h
+
 	pop rsi
 	pop rdi
 

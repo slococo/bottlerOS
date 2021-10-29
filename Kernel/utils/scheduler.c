@@ -37,6 +37,13 @@ typedef struct processCDT {
     // void * fpuBytes;
 } processCDT;
 
+typedef struct sleepCDT {
+    int pid;
+    long time;
+    long secs;
+    struct sleepCDT * next;
+} sleepCDT;
+
 // typedef union processCDT {
 //  struct {
 //     struct p * next;
@@ -60,16 +67,20 @@ processCDT * firstReady = NULL;
 processCDT * lastReady = NULL;
 processCDT * firstBlocked = NULL;
 processCDT * lastBlocked = NULL;
+sleepCDT * firstSleep = NULL;
 
 static processCDT * currentProcess = NULL;
 static int pids = IDLE_PID;
 static char update = 1;
+static char idleFlag = 2;
 
 uint64_t nextProcess() {
     update = 1;
     if (currentProcess == NULL) {
-        if (firstReady == NULL)
+        if (firstReady == NULL) {
+            idleFlag = 2;
             unblock(IDLE_PID);
+        }
 
         currentProcess = firstReady;
         return firstReady->rsp;
@@ -94,7 +105,7 @@ void idle() {
 }
 
 void initScheduler() {
-    char * argv[] = {"Idle"};
+    char * argv[] = {"idle"};
     enqueueProcess(idle, 0, 1, argv, NULL);
 }
 
@@ -104,7 +115,7 @@ void initScheduler() {
 // }
 
 // void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[]) {
-void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd) {
+int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd) {
     if (fd == NULL) {
         int * aux = pvPortMalloc(2 * sizeof(int));
         aux[0] = 0;
@@ -148,7 +159,8 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
     // _initialize_stack_frame(fn, rbp, argc, argv, &(process->fpuBytes), &(process->sseBytes));
     // _initialize_stack_frame(fn, rbp, argc, argv, &(process->bytes->s.sseBytes), &(process->bytes->s.fpuBytes));
     // _initialize_stack_frame(fn, rbp, argc, argv, process->bytes->s.sseBytes, process->bytes->s.fpuBytes);
-    process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
+    // process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
+    _initialize_stack_frame(fn, rbp, argc, argv);
 
     if (firstReady == NULL)
         firstReady = process;
@@ -156,7 +168,59 @@ void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *
         lastReady->next = process;
     lastReady = process;
         
-    return;
+    return process->pid;
+}
+
+void removeProcess(processCDT * del, processCDT * prev, processCDT ** first, processCDT ** last) {
+    if (prev == NULL) {
+        *first = del->next;
+        if (*last == del)
+            *last = NULL;
+    }
+    else {
+        prev->next = del->next;
+        if (*last == del)
+            *last = prev;
+    }
+}
+
+void sleep(int secs) {
+    if (currentProcess == NULL)
+        return;
+
+    sleepCDT * proc = pvPortMalloc(sizeof(sleepCDT));
+    proc->pid = currentProcess->pid;
+    proc->secs = secs;
+    proc->time = getTimeOfDay();
+    proc->next = firstSleep;
+    firstSleep = proc;
+
+    block(currentProcess->pid);
+}
+
+void wakeUp(sleepCDT * wake, sleepCDT * prev) {
+    if (wake == firstSleep)
+        firstSleep = wake->next;
+    else {
+        prev->next = wake->next;
+    }
+    unblockFirst(wake->pid);
+    vPortFree(wake);
+}
+
+void checkSleeping() {
+    sleepCDT * prev = NULL;
+    sleepCDT * aux = firstSleep;
+    while(aux != NULL) {
+        if (getTimeOfDay() >= aux->time + aux->secs) {
+            wakeUp(aux, prev);
+            aux = prev->next;
+        }
+        else {
+            prev = aux;
+            aux = aux->next;
+        }
+    }
 }
 
 // void * getSSEaddress() {
@@ -195,10 +259,17 @@ char block(int pid) {
     if (del == NULL)
         return EXIT_FAILURE;
     else {
-        if (prev != NULL)
-            prev->next = del->next;
-        else
-            firstReady = del->next;
+        removeProcess(del, prev, &firstReady, &lastReady);
+//        if (prev != NULL) {
+//            prev->next = del->next;
+//            if (lastReady == del)
+//                lastReady = prev;
+//        }
+//        else {
+//            firstReady = del->next;
+//            if (del == lastReady)
+//                lastReady = NULL;
+//        }
     }
 
     processCDT * next = del->next;
@@ -225,17 +296,70 @@ char unblock(int pid) {
     if (del == NULL)
         return EXIT_FAILURE;
     else {
-        if (prev != NULL)
-            prev->next = del->next;
-        else
-            firstBlocked = del->next;
-        del->next = NULL;
-        if (lastReady != NULL)
-            lastReady->next = del;
-        else
-            firstReady = del;
-        lastReady = del;
+        removeProcess(del, prev, &firstBlocked, &lastBlocked);
+//        if (prev != NULL) {
+//            prev->next = del->next;
+//            if (del == lastBlocked)
+//                lastBlocked = prev;
+//        }
+//        else {
+//            firstBlocked = del->next;
+//            if (lastBlocked == del)
+//                lastBlocked = NULL;
+//        }
     }
+
+    del->next = NULL;
+    if (lastReady != NULL)
+        lastReady->next = del;
+    else
+        firstReady = del;
+    lastReady = del;
+
+    // if (firstReady != NULL && firstReady->pid == IDLE_PID && lastReady->pid != IDLE_PID)
+    if (idleFlag && !(--idleFlag))
+        block(IDLE_PID);
+    
+    return EXIT_SUCCESS;
+}
+
+char unblockFirst(int pid) {
+    processADT prev = NULL;
+    processADT del = searchProcess(&prev, pid, firstBlocked);
+    if (del == NULL)
+        return EXIT_FAILURE;
+    else {
+        removeProcess(del, prev, &firstBlocked, &lastBlocked);
+//        if (prev != NULL) {
+//            prev->next = del->next;
+//            if (lastBlocked == del)
+//                lastBlocked = prev;
+//        }
+//        else {
+//            firstBlocked = del->next;
+//            if (lastBlocked == del)
+//                lastBlocked = NULL;
+//        }
+    }
+    
+    if (currentProcess != NULL) {
+        del->next = currentProcess->next;
+        currentProcess->next = del;
+        if (lastReady == currentProcess)
+            lastReady = del;
+    }
+    else {
+        if (firstReady != NULL)
+            del->next = firstReady->next;
+        else del->next = NULL;
+        firstReady = del;
+        if (lastReady == NULL)
+            lastReady = del;
+    }
+
+    // if (firstReady != NULL && lastReady->pid == IDLE_PID && firstReady->pid != IDLE_PID)
+    if (idleFlag && !(--idleFlag))
+        block(IDLE_PID);
     
     return EXIT_SUCCESS;
 }
@@ -248,23 +372,25 @@ char kill(int pid) {
         if (del == NULL)
             return EXIT_FAILURE;
         else {
-            if (prev != NULL) {
-                prev->next = del->next;
-                if (del == lastBlocked)
-                    lastBlocked = prev;
-            }
-            else
-                firstBlocked = del->next;
+            removeProcess(del, prev, &firstBlocked, &lastBlocked);
+            // if (prev != NULL) {
+            //     prev->next = del->next;
+            //     if (del == lastBlocked)
+            //         lastBlocked = prev;
+            // }
+            // else
+            //     firstBlocked = del->next;
         }
     }
     else {
-        if (prev != NULL) {
-            prev->next = del->next;
-            if (del == lastReady)
-                lastReady = prev;
-        }
-        else
-            firstReady = del->next;
+        removeProcess(del, prev, &firstReady, &lastReady);
+        // if (prev != NULL) {
+        //     prev->next = del->next;
+        //     if (del == lastReady)
+        //         lastReady = prev;
+        // }
+        // else
+        //     firstReady = del->next;
     }
 
     processCDT * next = del->next;
@@ -317,12 +443,13 @@ char nice(int pid, char offset) {
     return EXIT_SUCCESS;
 }
 
-void updateRSP(uint64_t newRsp) {
+char updateRSP(uint64_t newRsp) {
     if (currentProcess == NULL) {
-        return;
+        return -1;
     }
     if (update)
         currentProcess->rsp = newRsp;
+    return update;
 }
 
 int getPid() {

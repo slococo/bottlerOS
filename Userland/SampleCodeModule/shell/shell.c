@@ -16,6 +16,10 @@
 #include "semCom.h"
 #include "stddef.h"
 #include "nice.h"
+#include "phylo.h"
+#include "kill.h"
+#include "block.h"
+#include "unblock.h"
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
@@ -31,11 +35,12 @@ typedef struct cmd_t {
     char isBuiltIn;
 } cmd_t;
 
-const int len = 15;
 cmd_t commands[] = {
     { "help", help, 1 },
     { "cat", cat, 0 },
     { "time", time, 1 },
+    { "block", block, 0 },
+    { "unblock", unblock, 0 },
     { "inforeg", inforeg, 1 },
     { "excdiv", excdiv, 1 },
     { "excop", excop, 1 },
@@ -44,10 +49,13 @@ cmd_t commands[] = {
     { "cpufeatures", cpufeatures, 1 },
     { "nice", nice, 0 },
     { "ps", ps, 1 },
+    { "kill", kill, 1 },
     { "sem", sem, 1 },
     { "quadratic", quadratic, 0 },
     { "printmem", printmem, 0 },
+    { "phylo", phylo, 0 },
     { "wc", wc, 0 },
+    { NULL, NULL, 0}
 };
 
 int scanfNoPrint(char * buffer) {
@@ -119,7 +127,7 @@ void processInput(char * input) {
         for (int i = 0; i < end; i++)
             argv0[i] = tokens[i];
     }
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; commands[i].name != NULL; i++) {
         if (!strcmp(tokens[0], commands[i].name)) {
             comm_flag0 = 1;
             comm0 = i;
@@ -127,7 +135,7 @@ void processInput(char * input) {
         }
     }
     if (comm_flag0 && pipe != -1) {
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; commands[i].name != NULL; i++) {
             if (!strcmp(tokens[pipe + 1], commands[i].name)) {
                 comm_flag1 = 1;
                 comm1 = i;

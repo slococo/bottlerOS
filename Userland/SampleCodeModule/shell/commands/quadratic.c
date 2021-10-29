@@ -6,20 +6,20 @@
 void quadratic(int argc, char *argv[]) {
     if (argc != 4) {
         printStringLen("quadratic receives 3 doubles\n", 30);
-        return;
+        sys_exit();
     }
     
     double sol1, sol2, a = atof(argv[1]), b = atof(argv[2]), c = atof(argv[3]);
     if (a == 0) {
         printStringLen("First argument cannot be 0\n", 28);
-        return;
+        sys_exit();
     }
 
     int cond = quadSolver(a, b, c, &sol1, &sol2);
 
 	if (cond == 0) {
 		printStringLen("Not real!\n", 11);
-        return;
+        sys_exit();
     }
 	
 	char buffer[30] = {0};

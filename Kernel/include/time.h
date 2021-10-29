@@ -15,5 +15,6 @@ int seconds_elapsed();
 int getTimeGen(char option);
 int getTime(char option);
 void wait(long seconds);
+long getTimeOfDay();
 
 #endif

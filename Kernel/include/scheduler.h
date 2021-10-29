@@ -4,6 +4,7 @@
 #include "memManager.h"
 #include <stdlib.h>
 #include "lib.h"
+#include "time.h"
 #include <stddef.h>
 #include "schedulerLib.h"
 
@@ -23,7 +24,7 @@ typedef struct processCDT * processADT;
 void idle();
 void newProcess(processADT process, char * name, char priority, char foreground, uint64_t rsp, uint64_t rbp);
 uint64_t nextProcess();
-void updateRSP(uint64_t newRsp);
+char updateRSP(uint64_t newRsp);
 char getProcessData(char * out, processADT proc);
 
 #endif

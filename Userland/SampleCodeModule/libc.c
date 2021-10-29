@@ -54,6 +54,14 @@ void winClear() {
     sys_write(1, "\e\f", 2);
 }
 
+int strcpy(char * strDest, const char * strSrc) {
+	int i = 0;
+    while (*strDest++ = *strSrc++) {
+		i++;
+	}
+    return i;
+}
+
 char* gtoa(int value, char* buffer, int base, int length) {
    if (base < 2 || base > 32) {
         return buffer;

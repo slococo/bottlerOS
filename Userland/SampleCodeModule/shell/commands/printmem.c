@@ -17,7 +17,7 @@ void getMem(int * buffer, int initialAddress) {
 void printmem(int argc, char *argv[]) {
 	if (argc != 2) {
 		printStringLen("printmem receives a memory position\n", 37);
-		return;
+		sys_exit();
 	}
 
 	int buffer[8];

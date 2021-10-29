@@ -26,5 +26,7 @@ char * reverse(char * buffer, int i, int j);
 int pow(int base, int exponent);
 char * strstrip(char * s, char c);
 void ftoa(double f, char * buf, int precision);
+char * strcat(char * dest, const char * src);
+int strcpy(char * strDest, const char * strSrc);
 
 #endif
