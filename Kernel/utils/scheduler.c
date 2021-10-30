@@ -3,7 +3,7 @@
 
 // void _initialize_stack_frame(void *, void *, int, char**, void **, void **);
 // void _initialize_stack_frame(void *, void *, int, char**, void *, void *);
-uint64_t * _initialize_stack_frame(void *, void *, int, char**);
+uint64_t _initialize_stack_frame(void *, void *, int, char**);
 
 enum states {READY = 0, DEAD, BLOCKED};
 
@@ -32,8 +32,6 @@ processCDT * firstBlockedIteration = NULL;
 
 processCDT * firstProcess = NULL;
 processCDT * lastProcess = NULL;
-// processCDT * firstBlocked = NULL;
-// processCDT * lastBlocked = NULL;
 sleepCDT * firstSleep = NULL;
 
 static processCDT * currentProcess = NULL;
@@ -99,58 +97,6 @@ uint64_t nextProcess(uint64_t currentRSP) {
     currentProcess->executions++;
     return currentProcess->rsp;
 }
-
-/*
-uint64_t nextProcess(uint64_t currentRSP) {
-    if (currentProcess == firstBlockedIteration) {
-        idleFlag = 2;
-        unblock(IDLE_PID);
-    }
-    update = 1;
-    if (currentProcess == NULL) {
-        currentProcess = firstProcess;
-        return currentProcess->rsp;
-    }
-    else if (currentProcess->state == DEAD) {
-        processCDT * del = currentProcess;
-        if (currentProcess->next != NULL) {
-            currentProcess = currentProcess->next;
-        }
-        else currentProcess = firstProcess;
-        processCDT * prev = NULL;
-        removeProcess(del, prev, &firstProcess, &lastProcess);
-        vPortFree((void *) del);
-        return currentProcess->rsp;
-    }
-    currentProcess->rsp = currentRSP;
-    if (currentProcess->state == BLOCKED) {
-        if (firstBlockedIteration == NULL)
-            firstBlockedIteration = currentProcess;
-        processCDT * del = currentProcess;
-        if (currentProcess->next != NULL) {
-            currentProcess = currentProcess->next;
-        }
-        else if (firstProcess == NULL) {
-            idleFlag = 2;
-            unblock(IDLE_PID);
-        }
-        else currentProcess = firstProcess;
-        return currentProcess->rsp;
-    }
-    firstBlockedIteration = NULL;
-    if (currentProcess->executions < MAX_PRIORITY - currentProcess->priority + 1) {
-        currentProcess->executions++;
-        return currentProcess->rsp;
-    }
-    currentProcess->executions = 0;
-    if (currentProcess->next != NULL)
-        currentProcess = currentProcess->next;
-    else {
-        currentProcess = firstProcess;
-    }
-    return currentProcess->rsp;
-}
-*/
 
 void idle() {
     while (1) {

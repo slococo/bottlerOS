@@ -35,15 +35,15 @@ int getTime(char option) {
 
 // TODO
 void wait(long seconds) {
-	int initialSeconds = getTimeGen(SECONDS);
-	int initialMinutes = getTimeGen(MINUTES);
-	int runSeconds = 0;
-	if (initialSeconds + seconds >= 60) {
+	// int initialSeconds = getTimeGen(SECONDS);
+	// int initialMinutes = getTimeGen(MINUTES);
+	// int runSeconds = 0;
+	// if (initialSeconds + seconds >= 60) {
 
-	}
-	int newSeconds = 0;
-	while ((newSeconds = getTimeGen(SECONDS) - initialSeconds) < seconds)
-		haltcpu();
+	// }
+	// int newSeconds = 0;
+	// while ((newSeconds = getTimeGen(SECONDS) - initialSeconds) < seconds)
+	// 	haltcpu();
 	// while (initialSeconds - seconds != initialSeconds) {
 
 	// }
@@ -55,7 +55,7 @@ static long getTimeFrom2000() {
 	long months = 1 * 2629800;
 	long days = 1 * 86400;
 
-	long aux = years + months + days;
+	// long aux = years + months + days;
 
 	return years + months + days;
 }

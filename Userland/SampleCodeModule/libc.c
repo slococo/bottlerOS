@@ -33,7 +33,7 @@ char * strcat(char * dest, const char * src) {
 
     while (*dest)
       dest++;
-    while (*dest++ = *src++);
+    while ((*dest++ = *src++));
     return rdest;
 }
 
@@ -56,7 +56,7 @@ void winClear() {
 
 int strcpy(char * strDest, const char * strSrc) {
 	int i = 0;
-    while (*strDest++ = *strSrc++) {
+    while ((*strDest++ = *strSrc++)) {
 		i++;
 	}
     return i;

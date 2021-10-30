@@ -4,7 +4,7 @@
 #include "libc.h"
 #include "system.h"
 
-#define MAX_LEN 100
+#define MAX_PID_LEN 100
 
 void loop(int argc, char *argv[]);
 

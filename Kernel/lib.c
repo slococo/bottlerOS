@@ -113,7 +113,7 @@ void strlen(const char *str, int *len) {
 
 int strcpy(char * strDest, const char * strSrc) {
 	int i = 0;
-    while (*strDest++ = *strSrc++) {
+    while ((*strDest++ = *strSrc++)) {
 		i++;
 	}
     return i;

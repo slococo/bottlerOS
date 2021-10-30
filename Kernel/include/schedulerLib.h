@@ -17,5 +17,6 @@ int getFdOut();
 int getFdIn();
 void checkSleeping();
 char unblockFirst(int pid);
+void sleep(int secs);
 
 #endif
