@@ -201,31 +201,30 @@ void phylo(int argc, char ** argv) {
         phil = phil->right;
     } while (phil != firstPhil);
     
-    // char c;
-    // while (1)  {
-    //     while ((c = getChar()) != 0 && c != -1) {
-    //         if (c == 'a') {
-    //             addPhilo();
-    //         }
-    //         else if (c == 'r') {
-    //             removePhilo();
-    //         }
-    //         else if (c == 'q') {
-    //             break;
-    //         }
-    //     }
-    // }
+    //char c;
+    //while (1)  {
+    //    while ((c = getChar()) != 0 && c != -1) {
+    //        if (c == 'a') {
+    //            addPhilo();
+    //        }
+    //        else if (c == 'r') {
+    //            removePhilo();
+    //        }
+    //        else if (c == 'q') {
+    //            break;
+    //        }
+    //    }
+    //}
 
-    // phil = firstPhil;
-    // do {
-    //     sys_semClose(phil);
-    //     sys_free(phil);
-    //     sys_free(phil);
-    //     sys_free(phil);
-
-    //     sys_kill(phil->pid);
-    //     phil = phil->right;
-    // } while (phil != firstPhil); // PROBLEMA
+    //phil = firstPhil;
+    //do {
+    //    sys_semClose(phil);
+    //    sys_free(phil);
+    //    sys_free(phil);
+    //    sys_free(phil);
+    //    sys_kill(phil->pid);
+    //    phil = phil->right;
+    //} while (phil != firstPhil); // PROBLEMA
 
     sys_exit();
 }

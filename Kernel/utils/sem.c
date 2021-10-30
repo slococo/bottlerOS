@@ -106,10 +106,12 @@ void semPost(sem_t * sem) {
 
     sem->value++;
 
-    pid_t * aux = sem->entering;
-    sem->entering = sem->entering->next;
-    unblock(sem->entering->pid);
-    vPortFree(aux);
+    if (sem->entering != NULL) {
+        pid_t * aux = sem->entering;
+        sem->entering = sem->entering->next;
+        unblock(sem->entering->pid);
+        vPortFree(aux);
+    }
 
     leave_region(&semLock);
 }

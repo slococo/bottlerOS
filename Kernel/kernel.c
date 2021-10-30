@@ -181,7 +181,7 @@ int main() {
 	clear();
 	// haltcpu();
 	_sti();
-	// forceTimer();
+	forceTimer();
 
 	// printBottlerAndWait();
 	return EXIT_SUCCESS;

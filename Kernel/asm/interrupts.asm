@@ -28,7 +28,7 @@ EXTERN nextProcess
 GLOBAL switchContext
 GLOBAL loadProcess
 GLOBAL _initialize_stack_frame
-GLOBAL _switchContext, forceTimerAux
+;GLOBAL _switchContext, forceTimerAux
 
 EXTERN getFPUaddress, getSSEaddress
 EXTERN checkSleeping
@@ -173,110 +173,46 @@ picSlaveMask:
     pop     rbp
     retn
 
-; getFPUaddress:
-; 	push rcx
-; 	mov ecx, [auxi]
-; 	mov ecx, 1
-; 	xor ecx, [auxi]
-; 	cmp ecx, 0
-; 	jne .getSecond
-; 	mov rax, bytesForFPU1
-; 	jmp .finish
-; .getSecond:
-; 	mov rax, bytesForFPU2
-; .finish:
-; 	mov dword [auxi], ecx
-; 	pop rcx
-; 	ret
-
-; getSSEaddress:
-; 	push rcx
-; 	mov ecx, [auxi]
-; 	cmp ecx, 0
-; 	jne .getSecond
-; 	mov rax, bytesForSSEAligned1
-; 	jmp .finish
-; .getSecond:
-; 	mov rax, bytesForSSEAligned2
-; .finish:
-; 	pop rcx
-; 	ret
-
-forceTimerAux:
-	pushStateNoRax
-
-	; call checkSleeping
-
-	call nextProcess
-	mov rsp, rax
-
-	popStateNoRax
-	iretq
-
 ;8254 Timer (Timer Tick)
 _irq00Handler:
 	pushState
 
-	; mov rsi, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; fsave [rsp]
-	; and rsp, -16
-	; sub rsp, 512
-	; fxsave [rsp]
-	; push rsi
-
-	; push rax
-	; call getFPUaddress
-	; fsave [rax]
-	; call getSSEaddress
-	; fxsave [rax]
-	; pop rax
-	; fsave [bytesForFPU]
-	; fxsave [bytesForSSEAligned]
+	mov rsi, rsp
+	and rsp, -16
+	sub rsp, 108
+	fsave [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxsave [rsp]
+	push rsi
 
 	call checkSleeping
 
-	mov rdi, rsp
-	call updateRSP
-	mov r10, rax
+	; mov rdi, rsp
+	; call updateRSP
 
 	mov rdi, 0
 	call irqDispatcher
 
+	mov rdi, rsp
 	call nextProcess
 	mov rsp, rax
 
 	mov al, 20h
 	out 20h, al
 
-	; fxrstor [bytesForSSEAligned]
-	; frstor [bytesForFPU]
-	; push rax
-	; call getFPUaddress
-	; frstor [rax]
-	; call getSSEaddress
-	; fxrstor [rax]
-	; pop rax
-
-	; cmp r10, 0
-	; je .end
-	
-	; pop rsp
-	; mov rax, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; frstor [rsp]
-	; and rsp, -16
-	; sub rsp, 512
-	; fxrstor [rsp]
-	; mov rsp, rax
+	pop rsp
+	mov rax, rsp
+	and rsp, -16
+	sub rsp, 108
+	frstor [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxrstor [rsp]
+	mov rsp, rax
 
 	popState
 	iretq
-; .end:
-; 	popStateNoRax
-; 	iretq
 
 ;Keyboard
 _irq01Handler:
@@ -312,7 +248,6 @@ haltcpu:
 	cli
 	ret
 
-
 _initialize_stack_frame:
     mov r10, rsp
     mov rsp, rsi
@@ -328,28 +263,15 @@ _initialize_stack_frame:
 
     pushState
 
-	; mov rsi, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; fsave [rsp]
-	; and rsp, -16
-	; sub rsp, 512
-	; fxsave [rsp]
-	; push rsi
-	; mov rax, rsp
-
-	; fsave [bytesForFPU]
-	; fxsave [bytesForSSEAligned]
-
-	; push rax
-	; call getFPUaddress
-	; fsave [rax]
-	; call getSSEaddress
-	; fxsave [rax]
-	; pop rax
-
-	; fsave [r8]
-	; fxsave [r9]
+	mov rsi, rsp
+	and rsp, -16
+	sub rsp, 108
+	fsave [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxsave [rsp]
+	push rsi
+	mov rax, rsp
 
     mov rsp, r10
     ret
@@ -359,36 +281,34 @@ _systemCallsHandler:
 	pushStateNoRax
 	; fsave [bytesForFPU]
 	; fxsave [bytesForSSEAligned]
-	; mov [auxRSI], rsi
-	; mov rsi, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; fsave [rsp]
-	; and rsp, -16
-	; sub rsp, 512
-	; fxsave [rsp]
-	; push rsi
 
-	; mov [auxRDI], rdi
-	; mov rdi, rsp
-	; call updateRSP
+	mov [auxRSI], rsi
+	mov rsi, rsp
+	and rsp, -16
+	sub rsp, 108
+	fsave [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxsave [rsp]
+	push rsi
+	mov rsi, [auxRSI]
 
-	; mov rsi, [auxRSI]
-	; mov rdi, [auxRDI]
 	call systemCallsDispatcher
 
 	; fxrstor [bytesForSSEAligned]
 	; frstor [bytesForFPU]
 
-	; pop rsp
-	; mov rax, rsp
-	; and rsp, -16
-	; sub rsp, 108
-	; frstor [rsp]
-	; and rsp, -16
-	; sub rsp, 512
-	; fxrstor [rsp]
-	; mov rsp, rax
+	pop rsp
+	mov [auxRAX], rax
+	mov rax, rsp
+	and rsp, -16
+	sub rsp, 108
+	frstor [rsp]
+	and rsp, -16
+	sub rsp, 512
+	fxrstor [rsp]
+	mov rsp, rax
+	mov rax, [auxRAX]
 
 	popStateNoRax
 	iretq
@@ -396,18 +316,13 @@ _systemCallsHandler:
 SECTION .data
 	align 16
 	bytesForSSEAligned times 512 db 0
-	; bytesForSSEAligned1 times 512 db 0
-	; bytesForSSEAligned2 times 512 db 0
-	; counter dd 1
 
 SECTION .bss
 	aux resq 1
 	bytesForSSE resb 512
 	bytesForFPU resb 108
-	; bytesForFPU1 resb 108
-	; bytesForFPU2 resb 108
 	insPointer resb 8
 	rspPointer resb 8
 	auxRSI resb 8
 	auxRDI resb 8
-	; auxi resb 4
+	auxRAX resb 8

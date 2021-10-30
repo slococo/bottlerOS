@@ -20,6 +20,7 @@
 #include "kill.h"
 #include "block.h"
 #include "unblock.h"
+#include "loop.h"
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
@@ -55,6 +56,7 @@ cmd_t commands[] = {
     { "printmem", printmem, 0 },
     { "phylo", phylo, 0 },
     { "wc", wc, 0 },
+    { "loop", loop, 0 },
     { NULL, NULL, 0}
 };
 
