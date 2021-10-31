@@ -75,13 +75,6 @@ char semClose(sem_t * sem) {
     return EXIT_SUCCESS;
 }
 
-void debug2() {
-    return;
-}
-void debug3() {
-    return;
-}
-
 void semWait(sem_t * sem) {
     enter_region(&semLock);
 
@@ -90,7 +83,6 @@ void semWait(sem_t * sem) {
     } 
     else {
         leave_region(&semLock);
-        debug2();
 
         pid_t * curr = pvPortMalloc(sizeof(pid_t));
         curr->pid = getPid();
@@ -115,7 +107,6 @@ void semPost(sem_t * sem) {
     sem->value++;
 
     if (sem->entering != NULL) {
-        debug3();
         pid_t * aux = sem->entering;
         sem->entering = sem->entering->next;
         if (sem->entering == NULL)
@@ -165,6 +156,22 @@ char getSemaphoresData(char * out, node_t * node) {
         written += copied;
     }
     return written;
+}
+
+#define MAX_PID 4
+
+char * getEntering(sem_t * sem){
+    char * ans = pvPortMalloc(sizeof(pid_t *));
+    pid_t * aux = sem->entering;
+    char buffer[MAX_PID];
+    while(aux != NULL){
+        
+        strcpy(ans, itoa(aux->pid, buffer, 10, 3));
+        aux = aux->next;
+        if (aux != NULL)
+            strcpy(ans, ' ');
+    }
+    return ans;
 }
 
 char * getSems() {

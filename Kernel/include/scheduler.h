@@ -26,5 +26,6 @@ void newProcess(processADT process, char * name, char priority, char foreground,
 uint64_t nextProcess();
 char updateRSP(uint64_t newRsp);
 char getProcessData(char * out, processADT proc);
+processADT searchProcess(processADT * previous, int pid, processADT first);
 
 #endif

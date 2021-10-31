@@ -23,5 +23,6 @@ typedef struct node_t {
 char openPipe(int * fds, char * name);
 void writePipe(int fd, char c);
 char readPipe(int fd);
+char * pipes();
 
 #endif

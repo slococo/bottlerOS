@@ -10,6 +10,7 @@
 #include "quadratic.h"
 #include "cpu_id.h"
 #include "ps.h"
+#include "pipes.h"
 #include "wc.h"
 #include "filter.h"
 #include "cat.h"
@@ -34,30 +35,33 @@ typedef struct cmd_t {
     char * name;
     void (*func) (int argc, char * argv[]);
     char isBuiltIn;
+    char isForeground;
 } cmd_t;
 
 cmd_t commands[] = {
-    { "help", help, 1 },
-    { "cat", cat, 0 },
-    { "time", time, 1 },
-    { "block", block, 0 },
-    { "unblock", unblock, 0 },
-    { "inforeg", inforeg, 1 },
-    { "excdiv", excdiv, 1 },
-    { "excop", excop, 1 },
-    { "filter", filter, 0 },
-    { "clear", clear, 1 },
-    { "cpufeatures", cpufeatures, 1 },
-    { "nice", nice, 0 },
-    { "ps", ps, 1 },
-    { "kill", kill, 1 },
-    { "sem", sem, 1 },
-    { "quadratic", quadratic, 0 },
-    { "printmem", printmem, 0 },
-    { "phylo", phylo, 0 },
-    { "wc", wc, 0 },
-    { "loop", loop, 0 },
-    { NULL, NULL, 0}
+    { "help", help, 0, 1},
+    { "cat", cat, 0, 1},
+    { "time", time, 0, 1},
+    { "block", block, 1, 1},
+    { "unblock", unblock, 1, 1},
+    { "inforeg", inforeg, 0, 1},
+    { "excdiv", excdiv, 1, 1},
+    { "excop", excop, 1, 1},
+    { "filter", filter, 0, 1},
+    { "clear", clear, 1, 1},
+    { "cpufeatures", cpufeatures, 0, 1},
+    { "nice", nice, 0, 1},
+    { "ps", ps, 0, 1},
+    { "pipes", pipes, 0, 1},
+    { "kill", kill, 1, 1},
+    { "sem", sem, 0, 1},
+    { "quadratic", quadratic, 0, 1},
+    { "printmem", printmem, 0, 1},
+    { "phylo", phylo, 0, 1},
+    { "wc", wc, 0, 1},
+    { "loop", loop, 0, 0},
+    { "loopcaca", loop, 0, 1},
+    { NULL, NULL, 0, 0}
 };
 
 int scanfNoPrint(char * buffer) {
@@ -80,7 +84,7 @@ int scanfNoPrint(char * buffer) {
 }
 
 void processInput(char * input) {
-    int comm_flag0 = 0, comm_flag1 = 0, pipe = -1, end = -1;
+    int comm_flag0 = 0, comm_flag1 = 0, pipe = -1, end = -1, ampersand = -1;
     char* tokens[SIZE] = {0};
     tokens[0] = strstrip(input, ' ');
     for (int i = 1; i < MAX_ARGS; i++) {
@@ -90,6 +94,10 @@ void processInput(char * input) {
                 pipe = i - 1;
         }
         if (tokens[i][0] == 0) {
+            if (i > 1 && !strcmp(tokens[i-1], "&")) {
+                ampersand = end = i - 1;
+                break;
+            }
             end = i;
             break;
         }
@@ -148,11 +156,22 @@ void processInput(char * input) {
 
     if (comm_flag0 && (comm_flag1 || pipe == -1)) {
         if (pipe != -1) {
-            sys_loadProcess(commands[comm0].func, 1, pipe, argv0, fd1);
-            sys_loadProcess(commands[comm1].func, 1, end - pipe - 1, argv1, fd2);
+            sys_loadProcess(commands[comm0].func, commands[comm0].isForeground, pipe, argv0, fd1);
+            sys_loadProcess(commands[comm1].func, commands[comm0].isForeground, end - pipe - 1, argv1, fd2);
         }
-        else sys_loadProcess(commands[comm0].func, 1, end, argv0, fd1);
-        sys_wait();
+        else {
+            if (commands[comm0].isBuiltIn)
+                commands[comm0].func(end, argv0);
+                // sys_loadProcess(commands[comm0].func, 1, end, argv0, fd1);
+            else {
+                if (ampersand >= 0)
+                    commands[comm0].isForeground = 0;
+                sys_loadProcess(commands[comm0].func, commands[comm0].isForeground, end, argv0, fd1);
+            }
+        }
+
+        if (commands[comm0].isForeground)
+            sys_wait();
     }
 
     if (!comm_flag0) {
@@ -165,10 +184,10 @@ void processInput(char * input) {
     }
 }
 
-void loader(void (*fn) (int, char **), int argc, char * argv[]) {
-    fn(argc, argv);
-    sys_exit();
-}
+// void loader(void (*fn) (int, char **), int argc, char * argv[]) {
+//     fn(argc, argv);
+//     sys_exit();
+// }
 
 void shell(int argc, char *argv[]) {
     printStringLen("$> ", 3);

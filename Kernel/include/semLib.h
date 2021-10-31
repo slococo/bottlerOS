@@ -21,5 +21,6 @@ char semClose(sem_t * sem);
 void semWait(sem_t * sem);
 void semPost(sem_t * sem);
 char * getSems();
+char * getEntering(sem_t * sem);
 
 #endif

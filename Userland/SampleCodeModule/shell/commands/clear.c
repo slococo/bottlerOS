@@ -4,5 +4,6 @@
 
 void clear(int argc, char *argv[]) {
     winClear();
-    sys_exit();
+    // sys_exit();
+    return;
 }

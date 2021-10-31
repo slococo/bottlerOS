@@ -121,3 +121,65 @@ void closePipe(int fd) {
     vPortFree(del->pipe);
     vPortFree(del);
 }
+
+void getGenPipeData(char ** out, char * written, char toAdd, char * in, char isLast) {
+    char copied = strcpy(*out, in);
+    *out += copied;
+    *out += addSpaces(*out, toAdd - copied);
+    *written += toAdd;
+    if (!isLast) {
+        *out += addSpaces(*out, 2);
+        *written += 2;
+    }
+}
+
+char getPipeData(char * out, node_t * node) {
+    if (node == NULL)
+        return EXIT_FAILURE;
+
+    char written = 0;
+
+    char flag = 0;
+    for (int j = 0; j < MAX_NAME_SIZE; j++) {
+        if (!flag && node->pipe->name[j] == 0)
+            flag = 1;
+        else if (flag)
+            out += addSpaces(out, 1);
+        else
+            *out++ = node->pipe->name[j];
+    }
+    written += MAX_NAME_SIZE;
+
+    out += addSpaces(out, 2);
+    written += 2;
+    
+    char buffer[10];
+    getGenPipeData(&out, &written, MAX_ATTR_SIZE, itoa(node->pipe->fd[0], buffer, 10, 2), 0);
+    getGenPipeData(&out, &written, MAX_ATTR_SIZE, itoa(node->pipe->fd[1], buffer, 16, 10), 0);
+    char * aux = getEntering(node->pipe->sem);
+    getGenPipeData(&out, &written, MAX_PIDS_SIZE, aux, 1);
+    vPortFree(aux);
+    
+    return written;
+}
+
+char * pipes(){
+    char * ans = pvPortMalloc((fdIndex / 2) * PIPE_DATA_MAX_SIZE);
+    char * ret = ans;
+    
+    char * info = "name       fdIn    fdOut    pids\n";
+    ans += strcpy(ans, info);
+
+    node_t * aux = firstPipe;
+    while (aux != NULL) {
+        char writtenChars = getPipeData(ans, aux);
+        if (writtenChars == EXIT_FAILURE)
+            return NULL;
+        ans += writtenChars - 1;
+        *ans++ = '\n';
+        aux = aux->next;
+    }
+    *--ans = 0;
+
+    return ret;
+}
