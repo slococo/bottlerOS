@@ -152,6 +152,7 @@ void processInput(char * input) {
             sys_loadProcess(commands[comm1].func, 1, end - pipe - 1, argv1, fd2);
         }
         else sys_loadProcess(commands[comm0].func, 1, end, argv0, fd1);
+        sys_wait();
     }
 
     if (!comm_flag0) {

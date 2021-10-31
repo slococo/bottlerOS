@@ -34,6 +34,9 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
     char * bufferAux = (char *) buffer;
     int readBytes = 0;
 
+    if (!isForeground())
+        return 0;
+
     fd = getFdIn();
 
     if (fd == STDIN) {

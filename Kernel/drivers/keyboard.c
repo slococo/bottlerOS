@@ -75,8 +75,8 @@ unsigned char getKeyFromBuffer() {
   }
 
 	char aux = *current;
-    *current++ = 0;
-    return aux;
+  *current++ = 0;
+  return aux;
 }
 
 void keyboard_handler() {

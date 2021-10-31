@@ -4,7 +4,8 @@ GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
 GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_semClose
-GLOBAL sys_nice, sys_semWait, sys_semPost, sys_semOpen, sys_sleep, sys_kill, sys_getPid, sys_block, sys_unblock
+GLOBAL sys_nice, sys_semWait, sys_semPost, sys_semOpen, sys_sleep, sys_kill, sys_getPid,
+GLOBAL sys_block, sys_unblock, sys_wait
 
 section .text
 
@@ -166,51 +167,6 @@ sys_free:
     pop rbp
     ret
 
-; sys_fork:
-;     push rbp
-;     mov rbp, rsp
-
-; 	push rdi
-; 	push rsi
-; 	push rdx
-
-; 	mov rdx, rbp
-; 	mov rsi, rsp
-; 	mov rdi, 3
-; 	int 80h
-
-; 	pop rdx
-; 	pop rsi
-; 	pop rdi
-
-;     mov rsp, rbp
-;     pop rbp
-;     ret
-
-; sys_exec:
-;     push rbp
-;     mov rbp, rsp
-
-; 	push rdi
-; 	push rsi
-; 	push rdx
-; 	push rcx
-
-; 	mov rcx, rdx
-; 	mov rdx, rsi
-; 	mov rsi, rdi
-; 	mov rdi, 5
-; 	int 80h
-
-; 	pop rcx
-; 	pop rdx
-; 	pop rsi
-; 	pop rdi
-
-;     mov rsp, rbp
-;     pop rbp
-;     ret
-	
 sys_ps:
     push rbp
     mov rbp, rsp
@@ -248,6 +204,21 @@ sys_getPid:
 	push rdi
 
 	mov rdi, 17
+	int 80h
+
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_wait:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+
+	mov rdi, 21
 	int 80h
 
 	pop rdi

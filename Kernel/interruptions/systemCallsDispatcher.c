@@ -61,6 +61,8 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             return block(rsi);
         case 20:
             return unblock(rsi);
+        case 21:
+            return wait();
         default:
             return -1;
 	}

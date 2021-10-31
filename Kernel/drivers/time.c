@@ -34,7 +34,7 @@ int getTime(char option) {
 }
 
 // TODO
-void wait(long seconds) {
+/* void wait(long seconds) {
 	// int initialSeconds = getTimeGen(SECONDS);
 	// int initialMinutes = getTimeGen(MINUTES);
 	// int runSeconds = 0;
@@ -48,7 +48,7 @@ void wait(long seconds) {
 
 	// }
 	// while (seconds_elapsed() < seconds);
-}
+} */
 
 static long getTimeFrom2000() {
 	long years = 00 * 31557600;

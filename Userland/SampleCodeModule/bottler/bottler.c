@@ -34,7 +34,7 @@ void bottler(int argc, char ** argv) {
     printStringLen( "                              %%%%%%%%%%%%%                                 ", 80); new_line();
     printStringLen( "                                 %%%%%%%                                    ", 80); new_line();
     printStringLen( "                                                                            ", 80); new_line();
-	sys_sleep(3);
+	// sys_sleep(3);
 	
 	winClear();
     sys_exit();

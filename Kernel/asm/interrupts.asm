@@ -287,9 +287,9 @@ _systemCallsHandler:
 	and rsp, -16
 	sub rsp, 108
 	fsave [rsp]
-	and rsp, -16
-	sub rsp, 512
-	fxsave [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxsave [rsp]
 	push rsi
 	mov rsi, [auxRSI]
 
@@ -304,9 +304,9 @@ _systemCallsHandler:
 	and rsp, -16
 	sub rsp, 108
 	frstor [rsp]
-	and rsp, -16
-	sub rsp, 512
-	fxrstor [rsp]
+	; and rsp, -16
+	; sub rsp, 512
+	; fxrstor [rsp]
 	mov rsp, rax
 	mov rax, [auxRAX]
 
