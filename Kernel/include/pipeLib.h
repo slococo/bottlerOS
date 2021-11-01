@@ -13,6 +13,7 @@ typedef struct pipe_t {
     int currentW;
     char * name;
     sem_t * sem;
+    sem_t * fullSem;
 } pipe_t;
 
 typedef struct node_t {

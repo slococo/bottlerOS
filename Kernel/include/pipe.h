@@ -13,6 +13,7 @@
 #define SEM_NAME "Pipes"
 #define PIPE_DATA_MAX_SIZE 100
 #define MAX_PIDS_SIZE 50
+#define FULL_SEM_NAME "FullSem"
 
 int exists(pipe_t * pipe);
 node_t * searchPipe(node_t ** previous, int fd);

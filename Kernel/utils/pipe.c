@@ -13,6 +13,9 @@ char openPipe(int fds[2], char * name) {
     if ((pipe->sem = semOpen(SEM_NAME, 1)) == NULL)
         return EXIT_FAILURE;
 
+    if ((pipe->fullSem = semOpen(FULL_SEM_NAME, 0)) == NULL)
+        return EXIT_FAILURE;
+
     node_t * node = pvPortMalloc(sizeof(node_t));
     node->pipe = pipe;
     node->next = firstPipe;
@@ -85,6 +88,8 @@ void writePipe(int fd, char c) {
 
     semWait(node->pipe->sem);
 
+    semPost(node->pipe->fullSem);
+
     node->pipe->buffer[node->pipe->currentW++ % PIPE_MAX_SIZE] = c;
 
     semPost(node->pipe->sem);
@@ -95,6 +100,8 @@ char readPipe(int fd) {
     node_t * node = searchRPipe(&prev, fd);
 
     semWait(node->pipe->sem);
+
+    semPost(node->pipe->fullSem);
 
     char c = node->pipe->buffer[node->pipe->currentR++ % PIPE_MAX_SIZE];
 
@@ -115,6 +122,7 @@ void closePipe(int fd) {
     else firstPipe = del->next;
 
     semClose(del->pipe->sem);
+    semClose(del->pipe->fullSem);
     vPortFree(del->pipe->fd);
     vPortFree(del->pipe->name);
     vPortFree(del->pipe->buffer);

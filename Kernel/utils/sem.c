@@ -7,7 +7,6 @@ typedef struct node_t {
     struct node_t * next;
 } node_t;
 
-// static sem_t semaphores[MAX_SEM];
 node_t * firstSem = NULL;
 static char counter = 0;
 
@@ -164,12 +163,11 @@ char * getEntering(sem_t * sem){
     char * ans = pvPortMalloc(sizeof(pid_t *));
     pid_t * aux = sem->entering;
     char buffer[MAX_PID];
-    while(aux != NULL){
-        
+    while (aux != NULL) {
         strcpy(ans, itoa(aux->pid, buffer, 10, 3));
         aux = aux->next;
         if (aux != NULL)
-            strcpy(ans, ' ');
+            strcpy(ans, " ");
     }
     return ans;
 }

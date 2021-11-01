@@ -2,11 +2,7 @@
 #define KEYBOARD_H
 
 #include <stdint.h>
-
-// static unsigned char kbdsp[250];
-// static unsigned char kbdus[250];
-// static unsigned char kbdsp_sh[250];
-// static unsigned char kbdus_sh[250];
+#include "schedulerLib.h"
 
 void keyboard_handler();
 unsigned char getKeyFromBuffer();

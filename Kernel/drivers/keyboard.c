@@ -5,7 +5,7 @@ static unsigned char kbdus_sh[250];
 // static unsigned char kbdsp_sh[250];
 // static unsigned char kbdsp[250];
 
-#define SIZE 30
+#define SIZE 1
 unsigned char buffer[SIZE] = {0};
 unsigned char * current = buffer;
 unsigned char * last = buffer;
@@ -34,10 +34,10 @@ void testKeyboardInterrupt(unsigned char c) {
         flag = ~(flag | 0xFE);
     }
 
-    else if (c == 0x38) { //ALT
+    else if (c == 0x38) {
         flagChangeAlt = 0;
     }
-    else if (c == 0x3B) { //F1
+    else if (c == 0x3B) {
 		  flagChangeF1 = 0;
     }
     
@@ -80,6 +80,7 @@ unsigned char getKeyFromBuffer() {
 }
 
 void keyboard_handler() {
+    unblockIO();
     unsigned char c = getCharInterrupt();
     testKeyboardInterrupt(c);
 }

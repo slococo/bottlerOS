@@ -18,5 +18,7 @@ int getFdIn();
 void checkSleeping();
 char unblockFirst(int pid);
 void sleep(int secs);
+char blockIO();
+void unblockIO();
 
 #endif

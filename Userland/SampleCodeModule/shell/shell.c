@@ -1,42 +1,4 @@
-#include "libc.h"
-#include "help.h"
-#include "time.h"
 #include "shell.h"
-#include "clear.h"
-#include "inforeg.h"
-#include "printmem.h"
-#include "excDiv.h"
-#include "excOP.h"
-#include "quadratic.h"
-#include "cpu_id.h"
-#include "ps.h"
-#include "pipes.h"
-#include "wc.h"
-#include "filter.h"
-#include "cat.h"
-#include "semCom.h"
-#include "stddef.h"
-#include "nice.h"
-#include "phylo.h"
-#include "kill.h"
-#include "block.h"
-#include "unblock.h"
-#include "loop.h"
-#define EXIT_FAILURE 1
-#define EXIT_SUCCESS 0
-
-#define SIZE 100
-#define MAX_ARGS 11
-
-#define COLS 80
-#define ROWS 25
-
-typedef struct cmd_t {
-    char * name;
-    void (*func) (int argc, char * argv[]);
-    char isBuiltIn;
-    char isForeground;
-} cmd_t;
 
 cmd_t commands[] = {
     { "help", help, 0, 1},
@@ -103,6 +65,11 @@ void processInput(char * input) {
         }
     }
 
+    if (pipe != -1 && ampersand >= 0) {
+        printStringLen("piped processes are not able to run in background\n", 50);
+        return;
+    }
+
     int * fd, * fd1, * fd2;
     fd1 = sys_malloc(2 * sizeof(int));
     fd1[0] = 0;
@@ -162,7 +129,6 @@ void processInput(char * input) {
         else {
             if (commands[comm0].isBuiltIn)
                 commands[comm0].func(end, argv0);
-                // sys_loadProcess(commands[comm0].func, 1, end, argv0, fd1);
             else {
                 if (ampersand >= 0)
                     commands[comm0].isForeground = 0;
@@ -184,21 +150,17 @@ void processInput(char * input) {
     }
 }
 
-// void loader(void (*fn) (int, char **), int argc, char * argv[]) {
-//     fn(argc, argv);
-//     sys_exit();
-// }
-
 void shell(int argc, char *argv[]) {
     printStringLen("$> ", 3);
     char buffer[SIZE] = {0};
 
-    while (1) {
-        scanfNoPrint(buffer);
+    // while (1) {
+    while (scanfNoPrint(buffer) != 0) {
         new_line();
         processInput(buffer);
         printStringLen("$> ", 3);
     }
+    // }
 }
 
 void incorrect_comm(char * buffer) {

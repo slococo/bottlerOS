@@ -1,11 +1,9 @@
 #include "scheduler.h"
 #define IDLE_PID 1
 
-// void _initialize_stack_frame(void *, void *, int, char**, void **, void **);
-// void _initialize_stack_frame(void *, void *, int, char**, void *, void *);
 uint64_t _initialize_stack_frame(void *, void *, int, char**);
 
-enum states {READY = 0, DEAD, BLOCKED, BBCHILDREN, WAITING};
+enum states {READY = 0, DEAD, BLOCKED, BBCHILDREN, WAITING, BLOCKEDIO};
 
 typedef struct processCDT {
     struct processCDT * next;
@@ -41,19 +39,6 @@ static int pids = IDLE_PID;
 static char update = 1;
 static char idleFlag = 2;
 
-// void removeProcessIzElOrishinal(processCDT * del, processCDT * prev, processCDT ** first, processCDT ** last) {
-//     if (prev == NULL) {
-//         *first = del->next;
-//         if (*last == del)
-//             *last = NULL;
-//     }
-//     else {
-//         prev->next = del->next;
-//         if (*last == del)
-//             *last = prev;
-//     }
-// }
-
 void removeProcess(processCDT * del, processCDT ** first, processCDT ** last) {
     processCDT * prev = NULL;
     del = searchProcess(&prev, del->pid, *first);
@@ -70,24 +55,15 @@ void removeProcess(processCDT * del, processCDT ** first, processCDT ** last) {
     }
 }
 
-void debug1() {
-    return;
-}
-
 uint64_t nextProcess(uint64_t currentRSP) {
-    if (currentProcess != NULL /*&& currentProcess->state != BLOCKED*/)
+    if (currentProcess != NULL)
         currentProcess->rsp = currentRSP;
     processCDT * prev = currentProcess;
-    // if (currentProcess != NULL)
-    //     currentProcess = currentProcess->next;
     if (currentProcess != NULL && currentProcess->state == READY && currentProcess->executions == MAX_PRIORITY - currentProcess->priority + 1) {
         currentProcess->executions = 0;
         currentProcess = currentProcess->next;
-        // firstBlockedIteration = NULL;
-        // currentProcess->executions++;
-        // return currentProcess->rsp;
     }
-    while (currentProcess == NULL || currentProcess->state == BLOCKED || currentProcess->state == DEAD || currentProcess->state == WAITING) {
+    while (currentProcess == NULL || currentProcess->state == BLOCKED || currentProcess->state == DEAD || currentProcess->state == WAITING || currentProcess->state == BLOCKEDIO) {
         if (currentProcess == NULL) {
             currentProcess = firstProcess;
         }
@@ -98,29 +74,22 @@ uint64_t nextProcess(uint64_t currentRSP) {
             currentProcess = currentProcess->next;
         }
         else if (currentProcess->state == DEAD) {
-            debug1();
             processCDT * del = currentProcess;
             currentProcess = currentProcess->next;
             removeProcess(del, &firstProcess, &lastProcess);
             vPortFree((void *) del);
         }
-        else if (currentProcess->state == BLOCKED || currentProcess->state == WAITING) {
+        else if (currentProcess->state == BLOCKED || currentProcess->state == WAITING || currentProcess->state == BLOCKEDIO) {
             if (firstBlockedIteration == NULL)
                 firstBlockedIteration = currentProcess;
             prev = currentProcess;
             currentProcess = currentProcess->next;
         }
-        // else if (currentProcess != NULL && currentProcess->state == READY && currentProcess->executions == MAX_PRIORITY - currentProcess->priority + 1) {
-        //     currentProcess->executions = 0;
-        //     currentProcess = currentProcess->next;
-        // }
     }
     if (currentProcess->pid != IDLE_PID && idleFlag) {
         idleFlag = 0;
         block(IDLE_PID);
     }
-    // if (currentProcess->pid >= 5)
-    //     debug1();
     firstBlockedIteration = NULL;
     currentProcess->executions++;
     return currentProcess->rsp;
@@ -159,7 +128,7 @@ int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *a
     processADT process = pvPortMalloc(sizeof(processCDT));
     uint64_t * auxi = pvPortMalloc(STACK_SIZE);
     uint64_t * rbp = STACK_SIZE + auxi;
-    uint64_t * rsp = rbp - 20; // 20 //22
+    uint64_t * rsp = rbp - 20;
     
     char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
 
@@ -185,7 +154,6 @@ int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *a
     process->backWait = 0;
 
     process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
-    // _initialize_stack_frame(fn, rbp, argc, argv);
 
     if (firstProcess == NULL)
         firstProcess = process;
@@ -252,6 +220,36 @@ processADT searchProcess(processADT * previous, int pid, processADT first) {
     return curr;
 }
 
+void unblockIO() {
+    processCDT * aux = firstProcess;
+    while(aux != NULL) {
+        if (aux->state == BLOCKEDIO)
+            aux->state = READY;
+        
+        aux = aux->next;
+    }
+}
+
+char blockIO() {
+    if (currentProcess == NULL || currentProcess->state == DEAD)
+        return EXIT_FAILURE;
+    else {
+        currentProcess->state = BLOCKEDIO;
+    }
+
+    processCDT * prev = NULL;
+    processADT parent = searchProcess(&prev, currentProcess->ppid, firstProcess);
+    if (currentProcess->foreground) {
+        if (parent->backWait) {
+            parent->backWait = 0;
+            parent->foreground = 1;
+        }
+    }
+    forceTimer();
+
+    return EXIT_SUCCESS; 
+}
+
 char block(int pid) {
     processADT prev = NULL;
     processADT del = searchProcess(&prev, pid, firstProcess);
@@ -262,12 +260,12 @@ char block(int pid) {
     }
 
     processADT parent = searchProcess(&prev, del->ppid, firstProcess);
-    if (del->foreground)
+    if (del->foreground) {
         if (parent->backWait) {
             parent->backWait = 0;
             parent->foreground = 1;
         }
-
+    }
     if (pid == currentProcess->pid) {
         forceTimer();
     }
@@ -286,14 +284,12 @@ char unblock(int pid) {
     }
 
     processADT parent = searchProcess(&prev, del->ppid, firstProcess);
-    if (del->foreground)
+    if (del->foreground) {
         if (parent->foreground) {
             parent->backWait = 1;
             parent->foreground = 0;
         }
-    // if (idleFlag && !(--idleFlag))
-    //     block(IDLE_PID);
-    
+    }
     return EXIT_SUCCESS;
 }
 
@@ -443,7 +439,6 @@ char * processes(){
     
     char * info = "name       pid     prio    rsp         rbp         fore    state\n";
     ans += strcpy(ans, info);
-    // ans += 56;
 
     processCDT * aux = firstProcess;
     while (aux != NULL) {

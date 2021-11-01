@@ -42,10 +42,19 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
     if (fd == STDIN) {
         while (length-- > 0) {
             *bufferAux = getKeyFromBuffer();
-            if (*bufferAux == 0)
-                break;
+            if (*bufferAux == 0) {
+                bufferAux--;
+                length++;
+                readBytes--;
+                blockIO();
+            }
+            if (*bufferAux == '\v') {
+                return -1;
+                // break;
+            }
             readBytes++;
             bufferAux++;
+            // blockIO();
         }
     }
     else {
