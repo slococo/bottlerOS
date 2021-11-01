@@ -17,13 +17,14 @@ void inforeg(int argc, char *argv[]) {
 	
 	for (int i = 0; i < 17; i++) {
 		if (i % 5 == 0 && i != 0)
-			new_line();
+			newline();
 		printString(regsNames[i]);
 		printStringLen("0x", 2);
 		printString(gtoa(regs[i], bufferAux, 16, 20));
 		if (i != 14 && i % 5 != 4)
 			printStringLen(" - ", 3);
 	}
-	new_line();
+	addEOF();
+	newline();
 	sys_exit();
 }

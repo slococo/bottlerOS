@@ -7,7 +7,7 @@ void winClear();
 void printString(char * string);
 void printStringError(char * string);
 void printStringLen(char * string, int len);
-void new_line();
+void newline();
 void backspace();
 char getChar();
 void putChar(char c);
@@ -28,5 +28,6 @@ char * strstrip(char * s, char c);
 void ftoa(double f, char * buf, int precision);
 char * strcat(char * dest, const char * src);
 int strcpy(char * strDest, const char * strSrc);
+void addEOF();
 
 #endif

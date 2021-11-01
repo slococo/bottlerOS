@@ -28,7 +28,8 @@ void printmem(int argc, char *argv[]) {
 		char bufferAux[8];
 		printStringLen("0x", 2);
 		printString(itoa(buffer[i], bufferAux, 16));
-		new_line();
+		newline();
 	}
+	addEOF();
     sys_exit();
 }

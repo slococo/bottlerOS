@@ -4,7 +4,8 @@
 void sem(int argc, char *argv[]) {
     char * output = sys_sem();
     printString(output);
-    new_line();
+    newline();
     sys_free(output);
+    addEOF();
     sys_exit();
 }

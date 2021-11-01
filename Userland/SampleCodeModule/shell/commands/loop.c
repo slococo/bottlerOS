@@ -12,7 +12,7 @@ void loop(int argc, char *argv[]) {
     buffer = strcat(strcat(itoa(pid, buffer, 10), " "), str);
     while (1) {
         printString(buffer);
-        putChar('\n');
+        newline();
         sys_sleep(secs);
     }
     sys_free(buffer);

@@ -32,13 +32,14 @@ void quadratic(int argc, char *argv[]) {
     printString("x + ");
     ftoa(c, buffer, 10);
     printString(buffer);
-    new_line();
+    newline();
 	ftoa(sol1, buffer, 10);
 	printString(buffer);
 	printStringLen(" and ", 6);
     char buffer2[30] = {0};
 	ftoa(sol2, buffer2, 10);
 	printString(buffer2);
-    new_line();
+    addEOF();
+    newline();
     sys_exit();
 }

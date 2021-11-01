@@ -1,7 +1,7 @@
 include ../Makefile.inc
 
-MODULE=0000-sampleCodeModule.bin
-MODULE_ELF=0000-sampleCodeModule.elf
+MODULE=../0000-sampleCodeModule.bin
+MODULE_ELF=../0000-sampleCodeModule.elf
 SOURCES=$(wildcard *.c)
 SOURCES_SHELL=$(wildcard shell/*.c)
 SOURCES_ASM=$(wildcard asm/*.asm)
@@ -13,17 +13,17 @@ OBJECTS_PROMPT=$(SOURCES_PROMPT:.c=.o)
 OBJECTS_BOTTLER=$(SOURCES_BOTTLER:.c=.o)
 OBJECTS_ASM=$(SOURCES_ASM:.asm=.o)
 
-ALL_OBJECTS= $(OBJECTS) $(OBJECTS_ASM) $(OBJECTS_SHELL) $(OBJECTS_COMMANDS) $(OBJECTS_PROMPT) $(OBJECTS_BOTTLER)
+ALL_OBJECTS= $(OBJECTS) $(OBJECTS_ASM) $(OBJECTS_SHELL) $(OBJECTS_PROMPT) $(OBJECTS_BOTTLER)
 
 STATICLIBS=
 
 all: $(MODULE) $(MODULE_ELF)
 
 $(MODULE): $(STATICLIBS) $(ALL_OBJECTS)
-	$(LD) $(LDFLAGS) -T sampleCodeModule.ld $(OBJECTS) $(OBJECTS_SHELL) $(OBJECTS_ASM) $(OBJECTS_PROMPT) $(OBJECTS_BOTTLER) -o ../$(MODULE)
+	$(LD) $(LDFLAGS) -T sampleCodeModule.ld -o $@ $^
 
 $(MODULE_ELF): $(STATICLIBS) $(ALL_OBJECTS)
-	$(LD) $(LDFLAGS) -I./include -I./shell/include -I./bottler/include -T sampleCodeModule.ld --oformat=elf64-x86-64 $(OBJECTS) $(OBJECTS_SHELL) $(OBJECTS_ASM) $(OBJECTS_PROMPT) $(OBJECTS_BOTTLER) -o ../$(MODULE_ELF)
+	$(LD) $(LDFLAGS) -T sampleCodeModule.ld --oformat=elf64-x86-64 -o $@ $^
 
 %.o:%.c
 	$(GCC) $(GCCFLAGS) -T _loader.c -I./include -I./shell/include -I./bottler/include -c $< -o $@
@@ -32,6 +32,6 @@ $(MODULE_ELF): $(STATICLIBS) $(ALL_OBJECTS)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 clean:
-	rm -rf $(ALL_OBJECTS)
+	rm -rf $(ALL_OBJECTS) ../*.bin
 
 .PHONY: all clean print

@@ -4,7 +4,8 @@
 void pipes(int argc, char *argv[]) {
     char * output = sys_pipes();
     printString(output);
-    new_line();
+    newline();
     sys_free(output);
+    addEOF();
     sys_exit();
 }

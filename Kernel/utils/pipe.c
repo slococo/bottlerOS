@@ -88,20 +88,20 @@ void writePipe(int fd, char c) {
 
     semWait(node->pipe->sem);
 
-    semPost(node->pipe->fullSem);
-
     node->pipe->buffer[node->pipe->currentW++ % PIPE_MAX_SIZE] = c;
 
     semPost(node->pipe->sem);
+
+    semPost(node->pipe->fullSem);
 }
 
 char readPipe(int fd) {
     node_t *prev = NULL;
     node_t *node = searchRPipe(&prev, fd);
 
-    semWait(node->pipe->sem);
+    semWait(node->pipe->fullSem);
 
-    semPost(node->pipe->fullSem);
+    semWait(node->pipe->sem);
 
     char c = node->pipe->buffer[node->pipe->currentR++ % PIPE_MAX_SIZE];
 

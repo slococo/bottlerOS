@@ -7,7 +7,8 @@ static const int len = 9;
 void help(int argc, char *argv[]) {
     for (int i = 0; i < len; i++) {
         printString(info[i]);
-        new_line();
+        newline();
     }
+    addEOF();
     sys_exit();
 }

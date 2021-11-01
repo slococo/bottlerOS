@@ -4,7 +4,8 @@
 void ps(int argc, char *argv[]) {
     char * output = sys_ps();
     printString(output);
-    new_line();
+    addEOF();
+    newline();
     sys_free(output);
     sys_exit();
 }

@@ -234,14 +234,14 @@ char blockIO() {
         currentProcess->state = BLOCKEDIO;
     }
 
-    processCDT *prev = NULL;
-    processADT parent = searchProcess(&prev, currentProcess->ppid, firstProcess);
-    if (currentProcess->foreground) {
-        if (parent->backWait) {
-            parent->backWait = 0;
-            parent->foreground = 1;
-        }
-    }
+    // processCDT *prev = NULL;
+    // processADT parent = searchProcess(&prev, currentProcess->ppid, firstProcess);
+    // if (currentProcess->foreground) {
+    //     if (parent->backWait) {
+    //         parent->backWait = 0;
+    //         parent->foreground = 1;
+    //     }
+    // }
     forceTimer();
 
     return EXIT_SUCCESS;

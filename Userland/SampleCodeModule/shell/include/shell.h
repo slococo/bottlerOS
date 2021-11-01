@@ -21,7 +21,7 @@
 #include "semCom.h"
 #include "stddef.h"
 #include "nice.h"
-#include "phylo.h"
+#include "phyloLib.h"
 #include "kill.h"
 #include "block.h"
 #include "unblock.h"

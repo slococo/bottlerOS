@@ -1,32 +1,7 @@
 #include "phylo.h"
-#include <stddef.h>
-#include <stdint.h>
- 
-#define ARGV_SIZE 2
-#define BUFF_SIZE 20
-#define MAX_PHILO_SIZE 3
-#define MAX_NAME_SIZE 10
-#define STARTING 5
 
-int * state;
-typedef enum states {EATING = 0, HUNGRY, THINKING} states;
-
-typedef struct philosopher_t {
-    int debug;
-    char ** argv;
-    char * buffer;
-    sem_t * sem;
-    int pid;
-    states state;
-
-    struct philosopher_t * left;
-    struct philosopher_t * right;
-} philosopher_t;
-
-philosopher_t * firstPhil;
-
-sem_t * mutex;
-
+philosopher_t *firstPhil;
+sem_t *mutex;
 int philoCount = STARTING;
  
 void printState() {
@@ -37,7 +12,7 @@ void printState() {
         else putChar('.');
         phil = phil->right;
     } while (phil != firstPhil);
-    putChar('\n');
+    newline();
 }
 
 void test(philosopher_t * phil)
@@ -47,8 +22,6 @@ void test(philosopher_t * phil)
         sys_semPost(phil->sem);
     }
 }
-
-void philosopher(int argc, char ** argv);
 
 void addPhilo() {
     philoCount++;
@@ -60,8 +33,6 @@ void addPhilo() {
     new->sem = sys_semOpen("filosofo", 0);
 
     new->argv[0] = "filosofo";
-    // new->argv[1] = itoa((uint64_t) new, new->argv[1], 10);
-    // strcpy(phil->buffer, itoa((uint64_t) phil, phil->buffer, 10));
     strcpy(new->buffer, itoa((uint64_t) new, new->buffer, 10));
     new->argv[1] = new->buffer;
 
@@ -98,12 +69,9 @@ void take_fork(philosopher_t * phil) {
     sys_semPost(mutex);
  
     sys_semWait(phil->sem);
- 
-    // sys_sleep(1);
 }
  
 void put_fork(philosopher_t * phil) {
- 
     sys_semWait(mutex);
  
     phil->state = THINKING;
@@ -114,8 +82,7 @@ void put_fork(philosopher_t * phil) {
     sys_semPost(mutex);
 }
  
-void philosopher(int argc, char ** argv)
-{
+void philosopher(int argc, char ** argv) {
     if (argc != 2) {
         sys_exit();
     }
@@ -123,14 +90,12 @@ void philosopher(int argc, char ** argv)
     philosopher_t * i = (philosopher_t *) ((uint64_t) atoi(argv[1], -1));
 
     while (1) {
-        // sys_sleep(1);
         sys_sleep(1);
  
         take_fork(i);
         printState();
  
         sys_sleep(1);
-        // sys_sleep(2);
  
         put_fork(i);
         printState();
@@ -162,7 +127,6 @@ void phylo(int argc, char ** argv) {
         phil->sem = sys_semOpen("filosofo", 0);
 
         phil->argv[0] = "filosofo";
-        // phil->argv[1] = itoa((uint64_t) phil, phil->argv[1], 10);
         strcpy(phil->buffer, itoa((uint64_t) phil, phil->buffer, 10));
         phil->argv[1] = phil->buffer;
 
@@ -190,23 +154,21 @@ void phylo(int argc, char ** argv) {
     } while (phil != firstPhil);
     
     char c;
-    while (1)  {
-        while ((c = getChar()) != 0 && c != -1) {
-            if (c == 'a') {
-                addPhilo();
-            }
-            else if (c == 'r') {
-                removePhilo();
-            }
-            else if (c == 'q') {
-                end();
-            }
+    // while (1)  {
+    while ((c = getChar()) != 0 && c != -1) {
+        if (c == 'a') {
+            addPhilo();
+        }
+        else if (c == 'r') {
+            removePhilo();
+        }
+        else if (c == 'q') {
+            end();
         }
     }
+    // }
     sys_exit();
 }
-
-#include "ps.h"
 
 void freePhilo(philosopher_t * phil) {
     sys_semClose(phil->sem);
@@ -232,12 +194,7 @@ void end() {
     sys_exit();
 }
 
-
-
-// La primera es muy similar a:
-
 /*
  * Taken from "Operating Systems - Design and Implementation" by Tanenbaum
  * Section 2.3, page 91, Figure 2-10
- * https://gist.github.com/codelance/4186161
 */

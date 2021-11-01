@@ -21,12 +21,12 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
     char *bufferAux = (char *) buffer;
     int readBytes = 0;
 
-    if (!isForeground())
-        return 0;
-
     fd = getFdIn();
 
     if (fd == STDIN) {
+        if (!isForeground())
+            return 0;
+
         while (length-- > 0) {
             *bufferAux = getKeyFromBuffer();
             if (*bufferAux == 0) {
@@ -35,12 +35,10 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
                 readBytes--;
                 blockIO();
             }
-            if (*bufferAux == '\v') {
-                return 0;
-                // break;
-            }
             readBytes++;
-            bufferAux++;
+            if (*bufferAux++ == '\v') {
+                break;
+            }
             // blockIO();
         }
     } else {
@@ -48,10 +46,13 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
             *bufferAux = readPipe(fd);
             if (*bufferAux == 0)
                 break;
-            bufferAux++;
             readBytes++;
+            if (*bufferAux++ == '\v') {
+                break;
+            }
         }
     }
+    // *bufferAux = 0;
 
     return readBytes;
 }

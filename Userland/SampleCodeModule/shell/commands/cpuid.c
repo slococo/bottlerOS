@@ -104,8 +104,9 @@ void cpufeatures(int argc, char *argv[]) {
     for (int i = 0; i < len; i++) {
         if (checks[i]()) {
             printString(supports[i]);
-	        new_line();
+	        newline();
         }
     }
+    addEOF();
     sys_exit();
 }

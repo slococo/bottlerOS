@@ -6,7 +6,7 @@ void wc(int argc, char ** argv) {
     char c;
     int i = 0;
     char buffer[SIZE] = {0};
-    while ((c = getChar()) != 0 && c != -1) {
+    while ((c = getChar()) > 0) {
         if (i >= SIZE)
             break;
         if (c == '\n')
@@ -14,5 +14,6 @@ void wc(int argc, char ** argv) {
     }
 
     printStringLen(gtoa(i, buffer, 10, SIZE), SIZE);
+    newline();
     sys_exit();
 }
