@@ -10,7 +10,6 @@ typedef struct pid_t {
 
 typedef struct sem_t {
     unsigned int value;
-    // char name[MAX_NAME];
     char * name;
     pid_t * entering;
     pid_t * last;

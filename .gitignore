@@ -5,6 +5,7 @@
 index.html
 .bashrc
 .vscode/*
+.idea/
 
 #Binary Files
 *.bin

@@ -1,27 +1,14 @@
-#include <stdint.h>
-#include "video.h"
-#include "keyboard.h"
-#include "time.h"
-#include "pcb.h"
-#include "pipeLib.h"
-#include "schedulerLib.h"
-
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
-
-#define STDOUT_COLOR 0x0f
-#define STDERR_COLOR 0x04 
+#include "systemCalls.h"
 
 uint64_t write(uint64_t fd, uint64_t buffer, uint64_t length) {
-    char * bufferAux = (char *) buffer;
+    char *bufferAux = (char *) buffer;
     int color = STDOUT_COLOR;
 
     fd = getFdOut();
 
     if (fd != STDOUT) {
         int i = 0;
-	    while (bufferAux[i] != '\0' && i <= length) {
+        while (bufferAux[i] != '\0' && i <= length) {
             writePipe(fd, bufferAux[i++]);
         }
         return i;
@@ -31,7 +18,7 @@ uint64_t write(uint64_t fd, uint64_t buffer, uint64_t length) {
 }
 
 uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
-    char * bufferAux = (char *) buffer;
+    char *bufferAux = (char *) buffer;
     int readBytes = 0;
 
     if (!isForeground())
@@ -56,8 +43,7 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
             bufferAux++;
             // blockIO();
         }
-    }
-    else {
+    } else {
         while (length-- > 0) {
             *bufferAux = readPipe(fd);
             if (*bufferAux == 0)
@@ -67,9 +53,5 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
         }
     }
 
-	return readBytes;
+    return readBytes;
 }
-
-// void createProcess(void (*fn)) {
-//     newProcess(fn);
-// }

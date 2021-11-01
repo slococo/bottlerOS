@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include "lib.h"
+#include "../../include/lib.h"
 #include "scheduler.h"
 #include "memManager.h"
 #include "pipeLib.h"

@@ -1,16 +1,7 @@
-#include "lib.h"
-#include "time.h"
-#include "naiveConsole.h"
-#include "pcb.h"
-#include "video.h"
-#include "keyboard.h"
-#include "interrupts.h"
+#include "exceptions.h"
 
 static void * const sampleCodeAddress = (void *) 0x400000;
 typedef int (* fn)();
-
-#define ZERO_EXCEPTION_ID 0
-#define INVALID_OPCODE_ID 6
 
 static void zero_division();
 static void invalid_opcode();
@@ -42,12 +33,6 @@ static char * regsNames[] = {
 
 void printRegs() {
 	uint64_t * regs = stackFrame;
-
-	// 8 bytes = 64 bits = 2^64
-	// máximo: 18.446.744.073.709.551.616 / 2
-	// máximo: 9.223.372.036.854.775.808 entonces de 0 a 18
-	// dejo el primero para un -
-	
 	char buffer[20];
 
 	for (int i = 0; i < 15; i++) {
@@ -95,7 +80,6 @@ static void startOver() {
 }
 
 static void genericException(char * string, int len) {
-	// moveToWindowVideo(-1);
 	clear();
 	printStringLen(15, string, len);
     printRegs();

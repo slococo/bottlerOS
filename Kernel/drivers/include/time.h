@@ -1,5 +1,5 @@
-#ifndef _TIME_H_
-#define _TIME_H_
+#ifndef TIME_H
+#define TIME_H
 
 void timer_handler();
 int ticks_elapsed();
@@ -14,7 +14,6 @@ int seconds_elapsed();
 
 int getTimeGen(char option);
 int getTime(char option);
-// void wait(long seconds);
 long getTimeOfDay();
 
 #endif

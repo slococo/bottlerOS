@@ -1,32 +1,32 @@
 #include "shell.h"
 
 cmd_t commands[] = {
-    { "help", help, 0, 1},
-    { "cat", cat, 0, 1},
-    { "time", time, 0, 1},
-    { "block", block, 1, 1},
-    { "unblock", unblock, 1, 1},
-    { "inforeg", inforeg, 0, 1},
-    { "excdiv", excdiv, 1, 1},
-    { "excop", excop, 1, 1},
-    { "filter", filter, 0, 1},
-    { "clear", clear, 1, 1},
-    { "cpufeatures", cpufeatures, 0, 1},
-    { "nice", nice, 0, 1},
-    { "ps", ps, 0, 1},
-    { "pipes", pipes, 0, 1},
-    { "kill", kill, 1, 1},
-    { "sem", sem, 0, 1},
-    { "quadratic", quadratic, 0, 1},
-    { "printmem", printmem, 0, 1},
-    { "phylo", phylo, 0, 1},
-    { "wc", wc, 0, 1},
-    { "loop", loop, 0, 0},
-    { "loopcaca", loop, 0, 1},
-    { NULL, NULL, 0, 0}
+        {"help",        help,        0, 1},
+        {"cat",         cat,         0, 1},
+        {"time",        time,        0, 1},
+        {"block",       block,       1, 1},
+        {"unblock",     unblock,     1, 1},
+        {"inforeg",     inforeg,     0, 1},
+        {"excdiv",      excdiv,      1, 1},
+        {"excop",       excop,       1, 1},
+        {"filter",      filter,      0, 1},
+        {"clear",       clear,       1, 1},
+        {"cpufeatures", cpufeatures, 0, 1},
+        {"nice",        nice,        0, 1},
+        {"ps",          ps,          0, 1},
+        {"pipes",       pipes,       0, 1},
+        {"kill",        kill,        1, 1},
+        {"sem",         sem,         0, 1},
+        {"quadratic",   quadratic,   0, 1},
+        {"printmem",    printmem,    0, 1},
+        {"phylo",       phylo,       0, 1},
+        {"wc",          wc,          0, 1},
+        {"loop",        loop,        0, 0},
+        {"loopcaca",    loop,        0, 1},
+        {NULL,          NULL,        0, 0}
 };
 
-int scanfNoPrint(char * buffer) {
+int scanfNoPrint(char *buffer) {
     char c;
     int i = 0;
     while ((c = getChar()) != '\n' && i < SIZE - 1) {
@@ -34,8 +34,7 @@ int scanfNoPrint(char * buffer) {
             if (c == '\b' && i > 0) {
                 buffer[--i] = ' ';
                 backspace();
-            }
-            else if (c != 0 && c != '\b') { 
+            } else if (c != 0 && c != '\b') {
                 buffer[i++] = c;
                 putChar(c);
             }
@@ -45,9 +44,9 @@ int scanfNoPrint(char * buffer) {
     return i;
 }
 
-void processInput(char * input) {
+void processInput(char *input) {
     int comm_flag0 = 0, comm_flag1 = 0, pipe = -1, end = -1, ampersand = -1;
-    char* tokens[SIZE] = {0};
+    char *tokens[SIZE] = {0};
     tokens[0] = strstrip(input, ' ');
     for (int i = 1; i < MAX_ARGS; i++) {
         tokens[i] = strtok(tokens[i - 1], ' ');
@@ -56,7 +55,7 @@ void processInput(char * input) {
                 pipe = i - 1;
         }
         if (tokens[i][0] == 0) {
-            if (i > 1 && !strcmp(tokens[i-1], "&")) {
+            if (i > 1 && !strcmp(tokens[i - 1], "&")) {
                 ampersand = end = i - 1;
                 break;
             }
@@ -70,7 +69,7 @@ void processInput(char * input) {
         return;
     }
 
-    int * fd, * fd1, * fd2;
+    int *fd, *fd1, *fd2;
     fd1 = sys_malloc(2 * sizeof(int));
     fd1[0] = 0;
     fd1[1] = 1;
@@ -86,8 +85,8 @@ void processInput(char * input) {
         fd2[0] = fd[0];
         fd2[1] = 1;
     }
-    char ** argv0 = NULL;
-    char ** argv1 = NULL;
+    char **argv0 = NULL;
+    char **argv1 = NULL;
     int comm0 = -1;
     int comm1 = -1;
 
@@ -98,8 +97,7 @@ void processInput(char * input) {
         argv1 = sys_malloc(sizeof(char *) * (end - pipe - 1));
         for (int i = pipe + 1; i < end; i++)
             argv1[i - pipe - 1] = tokens[i];
-    }
-    else {
+    } else {
         argv0 = sys_malloc(sizeof(char *) * end);
         for (int i = 0; i < end; i++)
             argv0[i] = tokens[i];
@@ -125,8 +123,7 @@ void processInput(char * input) {
         if (pipe != -1) {
             sys_loadProcess(commands[comm0].func, commands[comm0].isForeground, pipe, argv0, fd1);
             sys_loadProcess(commands[comm1].func, commands[comm0].isForeground, end - pipe - 1, argv1, fd2);
-        }
-        else {
+        } else {
             if (commands[comm0].isBuiltIn)
                 commands[comm0].func(end, argv0);
             else {
@@ -143,8 +140,7 @@ void processInput(char * input) {
     if (!comm_flag0) {
         if (*tokens[0] != 0)
             incorrect_comm(tokens[0]);
-    }
-    else if (!comm_flag1 && pipe != -1) {
+    } else if (!comm_flag1 && pipe != -1) {
         if (*tokens[pipe + 1] != 0)
             incorrect_comm(tokens[pipe + 1]);
     }
@@ -154,21 +150,19 @@ void shell(int argc, char *argv[]) {
     printStringLen("$> ", 3);
     char buffer[SIZE] = {0};
 
-    // while (1) {
     while (scanfNoPrint(buffer) != 0) {
         new_line();
         processInput(buffer);
         printStringLen("$> ", 3);
     }
-    // }
 }
 
-void incorrect_comm(char * buffer) {
+void incorrect_comm(char *buffer) {
     printString(buffer);
     printStringLen(" is not a BottlerShell command\n", 32);
 }
 
-void incorrect_arg(char * command) {
+void incorrect_arg(char *command) {
     printStringLen("Incorrect arguments for command ", 33);
     printString(command);
     new_line();

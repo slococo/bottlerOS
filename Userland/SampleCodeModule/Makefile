@@ -17,10 +17,7 @@ ALL_OBJECTS= $(OBJECTS) $(OBJECTS_ASM) $(OBJECTS_SHELL) $(OBJECTS_COMMANDS) $(OB
 
 STATICLIBS=
 
-all: $(MODULE) $(MODULE_ELF) #shellModule
-
-#shellModule:
-#	cd shell; make
+all: $(MODULE) $(MODULE_ELF)
 
 $(MODULE): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T sampleCodeModule.ld $(OBJECTS) $(OBJECTS_SHELL) $(OBJECTS_ASM) $(OBJECTS_PROMPT) $(OBJECTS_BOTTLER) -o ../$(MODULE)
@@ -35,24 +32,6 @@ $(MODULE_ELF): $(STATICLIBS) $(ALL_OBJECTS)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 clean:
-#	cd shell; make clean
-	rm -rf *.o
-	cd shell; rm -rf *.o
-	cd shell/commands; rm -rf *.o
+	rm -rf $(ALL_OBJECTS)
 
 .PHONY: all clean print
-
-# include ../Makefile.inc
-
-# MODULE=0000-sampleCodeModule.bin
-# SOURCES=$(wildcard [^_]*.c)
-
-# all: $(MODULE)
-
-# $(MODULE): $(SOURCES)
-# 	$(GCC) $(GCCFLAGS) -T sampleCodeModule.ld _loader.c $(SOURCES) -I./include -o ../$(MODULE)
-
-# clean:
-# 	rm -rf *.o
-
-# .PHONY: all clean print

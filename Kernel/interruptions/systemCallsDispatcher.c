@@ -1,24 +1,18 @@
 #include <stdint.h>
 #include "systemCalls.h"
 #include "memManager.h"
-
-void exitProcess();
-// void setFn(uint64_t, uint64_t, uint64_t);
-char * processes();
-// int enqueueProcess(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-char openPipe(int *, char *);
-char nice(int, char);
+#include "pipeLib.h"
 #include "semLib.h"
 #include "schedulerLib.h"
 
 uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9) {
-	switch (rdi) {
-		case 0:
+    switch (rdi) {
+        case 0:
             return write(rsi, rdx, rcx);
         case 1:
             return read(rsi, rdx, rcx);
         case 2:
-            return getTime(rsi, rdx, rcx);
+            return getTime(rsi);
         case 3:
             return enqueueProcess((void (*)(int, char **)) rsi, rdx, rcx, (char **) r8, (int *) r9);
         case 4:
@@ -67,6 +61,6 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             return pipes();
         default:
             return -1;
-	}
+    }
     return 1;
 }

@@ -1,13 +1,12 @@
 #include "scheduler.h"
-#define IDLE_PID 1
 
-uint64_t _initialize_stack_frame(void *, void *, int, char**);
-
-enum states {READY = 0, DEAD, BLOCKED, BBCHILDREN, WAITING, BLOCKEDIO};
+enum states {
+    READY = 0, DEAD, BLOCKED, BBCHILDREN, WAITING, BLOCKEDIO
+};
 
 typedef struct processCDT {
-    struct processCDT * next;
-    char * name;
+    struct processCDT *next;
+    char *name;
     int pid;
     int ppid;
     uint64_t rsp;
@@ -16,7 +15,7 @@ typedef struct processCDT {
     char executions;
     char foreground;
     enum states state;
-    int * fd;
+    int *fd;
     int children;
     char backWait;
 } processCDT;
@@ -25,30 +24,29 @@ typedef struct sleepCDT {
     int pid;
     long time;
     long secs;
-    struct sleepCDT * next;
+    struct sleepCDT *next;
 } sleepCDT;
 
-processCDT * firstBlockedIteration = NULL;
+processCDT *firstBlockedIteration = NULL;
 
-processCDT * firstProcess = NULL;
-processCDT * lastProcess = NULL;
-sleepCDT * firstSleep = NULL;
+processCDT *firstProcess = NULL;
+processCDT *lastProcess = NULL;
+sleepCDT *firstSleep = NULL;
 
-static processCDT * currentProcess = NULL;
+static processCDT *currentProcess = NULL;
 static int pids = IDLE_PID;
 static char update = 1;
 static char idleFlag = 2;
 
-void removeProcess(processCDT * del, processCDT ** first, processCDT ** last) {
-    processCDT * prev = NULL;
+void removeProcess(processCDT *del, processCDT **first, processCDT **last) {
+    processCDT *prev = NULL;
     del = searchProcess(&prev, del->pid, *first);
-    
+
     if (prev == NULL) {
         *first = del->next;
         if (*last == del)
             *last = NULL;
-    }
-    else {
+    } else {
         prev->next = del->next;
         if (*last == del)
             *last = prev;
@@ -58,28 +56,28 @@ void removeProcess(processCDT * del, processCDT ** first, processCDT ** last) {
 uint64_t nextProcess(uint64_t currentRSP) {
     if (currentProcess != NULL)
         currentProcess->rsp = currentRSP;
-    processCDT * prev = currentProcess;
-    if (currentProcess != NULL && currentProcess->state == READY && currentProcess->executions == MAX_PRIORITY - currentProcess->priority + 1) {
+    processCDT *prev = currentProcess;
+    if (currentProcess != NULL && currentProcess->state == READY &&
+        currentProcess->executions == MAX_PRIORITY - currentProcess->priority + 1) {
         currentProcess->executions = 0;
         currentProcess = currentProcess->next;
     }
-    while (currentProcess == NULL || currentProcess->state == BLOCKED || currentProcess->state == DEAD || currentProcess->state == WAITING || currentProcess->state == BLOCKEDIO) {
+    while (currentProcess == NULL || currentProcess->state == BLOCKED || currentProcess->state == DEAD ||
+           currentProcess->state == WAITING || currentProcess->state == BLOCKEDIO) {
         if (currentProcess == NULL) {
             currentProcess = firstProcess;
-        }
-        else if (currentProcess == firstBlockedIteration) {
+        } else if (currentProcess == firstBlockedIteration) {
             idleFlag = 1;
             unblock(IDLE_PID);
             prev = currentProcess;
             currentProcess = currentProcess->next;
-        }
-        else if (currentProcess->state == DEAD) {
-            processCDT * del = currentProcess;
+        } else if (currentProcess->state == DEAD) {
+            processCDT *del = currentProcess;
             currentProcess = currentProcess->next;
             removeProcess(del, &firstProcess, &lastProcess);
             vPortFree((void *) del);
-        }
-        else if (currentProcess->state == BLOCKED || currentProcess->state == WAITING || currentProcess->state == BLOCKEDIO) {
+        } else if (currentProcess->state == BLOCKED || currentProcess->state == WAITING ||
+                   currentProcess->state == BLOCKEDIO) {
             if (firstBlockedIteration == NULL)
                 firstBlockedIteration = currentProcess;
             prev = currentProcess;
@@ -102,13 +100,13 @@ void idle() {
 }
 
 void initScheduler() {
-    char * argv[] = {"idle"};
+    char *argv[] = {"idle"};
     nice(enqueueProcess(idle, 0, 1, argv, NULL), 19);
 }
 
-int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd) {
+int enqueueProcess(void (*fn)(int, char **), char foreground, int argc, char *argv[], int *fd) {
     if (fd == NULL) {
-        int * aux = pvPortMalloc(2 * sizeof(int));
+        int *aux = pvPortMalloc(2 * sizeof(int));
         aux[0] = 0;
         aux[1] = 1;
         fd = aux;
@@ -126,13 +124,13 @@ int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *a
     }
 
     processADT process = pvPortMalloc(sizeof(processCDT));
-    uint64_t * auxi = pvPortMalloc(STACK_SIZE);
-    uint64_t * rbp = STACK_SIZE + auxi;
-    uint64_t * rsp = rbp - 20;
-    
-    char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY/2;
+    uint64_t *auxi = pvPortMalloc(STACK_SIZE);
+    uint64_t *rbp = STACK_SIZE + auxi;
+    uint64_t *rsp = rbp - 20;
 
-    char * aux = pvPortMalloc(10);
+    char priority = (foreground == 1) ? DEF_PRIORITY : MAX_PRIORITY / 2;
+
+    char *aux = pvPortMalloc(10);
     int j;
     for (j = 0; j < MAX_NAME_SIZE - 1 && argv[0][j] != 0; j++) {
         aux[j] = argv[0][j];
@@ -157,10 +155,10 @@ int enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *a
 
     if (firstProcess == NULL)
         firstProcess = process;
-    else 
+    else
         lastProcess->next = process;
     lastProcess = process;
-        
+
     return process->pid;
 }
 
@@ -168,7 +166,7 @@ void sleep(int secs) {
     if (currentProcess == NULL)
         return;
 
-    sleepCDT * proc = pvPortMalloc(sizeof(sleepCDT));
+    sleepCDT *proc = pvPortMalloc(sizeof(sleepCDT));
     proc->pid = currentProcess->pid;
     proc->secs = secs;
     proc->time = getTimeOfDay();
@@ -178,7 +176,7 @@ void sleep(int secs) {
     block(currentProcess->pid);
 }
 
-void wakeUp(sleepCDT * wake, sleepCDT * prev) {
+void wakeUp(sleepCDT *wake, sleepCDT *prev) {
     if (wake == firstSleep)
         firstSleep = wake->next;
     else {
@@ -189,43 +187,42 @@ void wakeUp(sleepCDT * wake, sleepCDT * prev) {
 }
 
 void checkSleeping() {
-    sleepCDT * prev = NULL;
-    sleepCDT * aux = firstSleep;
-    while(aux != NULL) {
+    sleepCDT *prev = NULL;
+    sleepCDT *aux = firstSleep;
+    while (aux != NULL) {
         if (getTimeOfDay() >= aux->time + aux->secs) {
             wakeUp(aux, prev);
             aux = prev->next;
-        }
-        else {
+        } else {
             prev = aux;
             aux = aux->next;
         }
     }
 }
 
-processADT searchProcess(processADT * previous, int pid, processADT first) {
+processADT searchProcess(processADT *previous, int pid, processADT first) {
     processADT curr = first;
-    * previous = NULL;
+    *previous = NULL;
     while (curr != NULL) {
         if (curr->pid == pid) {
             break;
         }
-        * previous = curr;
+        *previous = curr;
         curr = curr->next;
     }
     if (curr == NULL) {
-        * previous = NULL;
+        *previous = NULL;
         return NULL;
     }
     return curr;
 }
 
 void unblockIO() {
-    processCDT * aux = firstProcess;
-    while(aux != NULL) {
+    processCDT *aux = firstProcess;
+    while (aux != NULL) {
         if (aux->state == BLOCKEDIO)
             aux->state = READY;
-        
+
         aux = aux->next;
     }
 }
@@ -237,7 +234,7 @@ char blockIO() {
         currentProcess->state = BLOCKEDIO;
     }
 
-    processCDT * prev = NULL;
+    processCDT *prev = NULL;
     processADT parent = searchProcess(&prev, currentProcess->ppid, firstProcess);
     if (currentProcess->foreground) {
         if (parent->backWait) {
@@ -247,7 +244,7 @@ char blockIO() {
     }
     forceTimer();
 
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
 }
 
 char block(int pid) {
@@ -270,7 +267,7 @@ char block(int pid) {
         forceTimer();
     }
 
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
 }
 
 char unblock(int pid) {
@@ -278,8 +275,7 @@ char unblock(int pid) {
     processADT del = searchProcess(&prev, pid, firstProcess);
     if (del == NULL || del->state == DEAD) {
         return EXIT_FAILURE;
-    }
-    else {
+    } else {
         del->state = READY;
     }
 
@@ -347,8 +343,7 @@ char nice(int pid, char offset) {
     processADT del = searchProcess(&prev, pid, firstProcess);
     if (del == NULL) {
         return EXIT_FAILURE;
-    }
-    else {
+    } else {
         del->priority = offset + 20;
     }
     return EXIT_SUCCESS;
@@ -391,7 +386,7 @@ char isForeground() {
     return currentProcess->foreground;
 }
 
-void getGenProcessData(char ** out, char * written, char toAdd, char * in, char isLast) {
+void getGenProcessData(char **out, char *written, char toAdd, char *in, char isLast) {
     char copied = strcpy(*out, in);
     *out += copied;
     *out += addSpaces(*out, toAdd - copied);
@@ -402,7 +397,7 @@ void getGenProcessData(char ** out, char * written, char toAdd, char * in, char 
     }
 }
 
-char getProcessData(char * out, processCDT * proc) {
+char getProcessData(char *out, processCDT *proc) {
     if (proc == NULL)
         return EXIT_FAILURE;
 
@@ -421,26 +416,27 @@ char getProcessData(char * out, processCDT * proc) {
 
     out += addSpaces(out, 2);
     written += 2;
-    
+
     char buffer[10];
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->pid, buffer, 10, 10), 0);
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, itoa(proc->priority, buffer, 10, 2), 0);
     getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rsp, buffer, 16, 10), 0);
     getGenProcessData(&out, &written, MAX_NAME_SIZE, itoa(proc->rbp, buffer, 16, 10), 0);
     getGenProcessData(&out, &written, MAX_ATTR_SIZE, (proc->foreground == 1) ? "F" : "B", 0);
-    getGenProcessData(&out, &written, MAX_ATTR_SIZE, proc->state == BLOCKED ? "Block" : proc->state == DEAD ? "Killed" : "Ready", 1);
-    
+    getGenProcessData(&out, &written, MAX_ATTR_SIZE,
+                      proc->state == BLOCKED ? "Block" : proc->state == DEAD ? "Killed" : "Ready", 1);
+
     return written;
 }
 
-char * processes(){
-    char * ans = pvPortMalloc(pids * PROCESS_DATA_MAX_SIZE);
-    char * ret = ans;
-    
-    char * info = "name       pid     prio    rsp         rbp         fore    state\n";
+char *processes() {
+    char *ans = pvPortMalloc(pids * PROCESS_DATA_MAX_SIZE);
+    char *ret = ans;
+
+    char *info = "name       pid     prio    rsp         rbp         fore    state\n";
     ans += strcpy(ans, info);
 
-    processCDT * aux = firstProcess;
+    processCDT *aux = firstProcess;
     while (aux != NULL) {
         char writtenChars = getProcessData(ans, aux);
         if (writtenChars == EXIT_FAILURE)

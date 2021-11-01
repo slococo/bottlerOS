@@ -32,7 +32,7 @@ $(KERNEL_ELF): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T kernel.ld --oformat=elf64-x86-64 -o $@ $^
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./include -I./drivers -I./interruptions -I./utils -I./tests $(MFLAG) -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I./drivers/include -I./interruptions/include -I./utils/include -I./tests/include $(MFLAG) -c $< -o $@
 
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@

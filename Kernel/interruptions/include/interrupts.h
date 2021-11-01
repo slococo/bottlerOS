@@ -1,7 +1,8 @@
 #ifndef INTERRUPS_H_
 #define INTERRUPS_H_
 
-#include <idtLoader.h>
+#include "idtLoader.h"
+#include <stdint.h>
 
 void _irq00Handler(void);
 void _irq01Handler(void);
@@ -27,4 +28,4 @@ void picSlaveMask(uint8_t mask);
 
 void haltcpu(void);
 
-#endif /* INTERRUPS_H_ */
+#endif

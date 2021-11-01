@@ -3,20 +3,20 @@
 static uint32_t semLock;
 
 typedef struct node_t {
-    sem_t * sem;
-    struct node_t * next;
+    sem_t *sem;
+    struct node_t *next;
 } node_t;
 
-node_t * firstSem = NULL;
+node_t *firstSem = NULL;
 static char counter = 0;
 
-sem_t * semOpen(char * name, unsigned int value) {
+sem_t *semOpen(char *name, unsigned int value) {
     enter_region(&semLock);
-    
-    sem_t * sem = pvPortMalloc(sizeof(sem_t));
-    node_t * node = pvPortMalloc(sizeof(node_t));
+
+    sem_t *sem = pvPortMalloc(sizeof(sem_t));
+    node_t *node = pvPortMalloc(sizeof(node_t));
     node->sem = sem;
-    node->next = firstSem;    
+    node->next = firstSem;
     firstSem = node;
     sem->name = pvPortMalloc(MAX_NAME);
     strcpy(sem->name, name);
@@ -28,27 +28,27 @@ sem_t * semOpen(char * name, unsigned int value) {
     return sem;
 }
 
-char semClose(sem_t * sem) {
+char semClose(sem_t *sem) {
     if (sem == NULL)
         return EXIT_FAILURE;
 
     enter_region(&semLock);
 
-    node_t * del = NULL;
+    node_t *del = NULL;
 
     if (firstSem->sem == sem) {
         del = firstSem;
         firstSem = firstSem->next;
-    }
-    else {
-        node_t * aux = firstSem;
+    } else {
+        node_t *aux = firstSem;
         while (aux != NULL) {
-            if (aux->next != NULL)
+            if (aux->next != NULL) {
                 if (aux->next->sem == sem) {
                     del = aux->next;
                     aux->next = aux->next->next;
                     break;
                 }
+            }
             aux = aux->next;
         }
     }
@@ -58,32 +58,31 @@ char semClose(sem_t * sem) {
         return EXIT_FAILURE;
     }
 
-    pid_t * pid = sem->entering;
+    pid_t *pid = sem->entering;
     while (pid != NULL) {
-        pid_t * aux = pid;
+        pid_t *aux = pid;
         pid = pid->next;
         vPortFree(aux);
     }
     vPortFree(sem->name);
     vPortFree(sem);
     vPortFree(del);
-    
+
     counter--;
     leave_region(&semLock);
 
     return EXIT_SUCCESS;
 }
 
-void semWait(sem_t * sem) {
+void semWait(sem_t *sem) {
     enter_region(&semLock);
 
     if (sem->value > 0) {
         sem->value--;
-    } 
-    else {
+    } else {
         leave_region(&semLock);
 
-        pid_t * curr = pvPortMalloc(sizeof(pid_t));
+        pid_t *curr = pvPortMalloc(sizeof(pid_t));
         curr->pid = getPid();
         curr->next = NULL;
         if (sem->entering == NULL)
@@ -100,13 +99,13 @@ void semWait(sem_t * sem) {
     leave_region(&semLock);
 }
 
-void semPost(sem_t * sem) {
+void semPost(sem_t *sem) {
     enter_region(&semLock);
 
     sem->value++;
 
     if (sem->entering != NULL) {
-        pid_t * aux = sem->entering;
+        pid_t *aux = sem->entering;
         sem->entering = sem->entering->next;
         if (sem->entering == NULL)
             sem->last = NULL;
@@ -117,7 +116,7 @@ void semPost(sem_t * sem) {
     leave_region(&semLock);
 }
 
-char getSemaphoresData(char * out, node_t * node) {
+char getSemaphoresData(char *out, node_t *node) {
     if (node == NULL)
         return EXIT_FAILURE;
 
@@ -136,7 +135,7 @@ char getSemaphoresData(char * out, node_t * node) {
 
     out += addSpaces(out, 2);
     written += 2;
-    
+
     char buffer[10];
     char copied = strcpy(out, itoa(node->sem->value, buffer, 10, 2));
     out += copied;
@@ -146,7 +145,7 @@ char getSemaphoresData(char * out, node_t * node) {
     written += 2;
 
     pid_t *aux_pid = node->sem->entering;
-        
+
     while (aux_pid != NULL) {
         copied = strcpy(out, itoa(aux_pid->pid, buffer, 10, 10));
         aux_pid = aux_pid->next;
@@ -157,11 +156,9 @@ char getSemaphoresData(char * out, node_t * node) {
     return written;
 }
 
-#define MAX_PID 4
-
-char * getEntering(sem_t * sem){
-    char * ans = pvPortMalloc(sizeof(pid_t *));
-    pid_t * aux = sem->entering;
+char *getEntering(sem_t *sem) {
+    char *ans = pvPortMalloc(sizeof(pid_t * ));
+    pid_t *aux = sem->entering;
     char buffer[MAX_PID];
     while (aux != NULL) {
         strcpy(ans, itoa(aux->pid, buffer, 10, 3));
@@ -172,14 +169,14 @@ char * getEntering(sem_t * sem){
     return ans;
 }
 
-char * getSems() {
-    char * ans = pvPortMalloc(counter * SEM_DATA_MAX_SIZE);
-    char * ret = ans;
-    
-    char * info = "name       value   pidsWaiting\n";
+char *getSems() {
+    char *ans = pvPortMalloc(counter * SEM_DATA_MAX_SIZE);
+    char *ret = ans;
+
+    char *info = "name       value   pidsWaiting\n";
     ans += strcpy(ans, info);
 
-    node_t * aux = firstSem;
+    node_t *aux = firstSem;
     while (aux != NULL) {
         char writtenChars = getSemaphoresData(ans, aux);
         if (writtenChars == EXIT_FAILURE)

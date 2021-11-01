@@ -18,38 +18,40 @@ extern uint8_t endOfKernel;
 
 static const uint64_t PageSize = 0x1000;
 
-static void * const sampleCodeModuleAddress = (void*)0x400000;
-static void * const sampleDataModuleAddress = (void*)0x500000;
-static void * const memoryModuleAddress = (void*)0x600000;
+static void *const sampleCodeModuleAddress = (void *) 0x400000;
+static void *const sampleDataModuleAddress = (void *) 0x500000;
+static void *const memoryModuleAddress = (void *) 0x600000;
 
 typedef int (*EntryPoint)();
 
-void clearBSS(void * bssAddress, uint64_t bssSize) {
-	memset(bssAddress, 0, bssSize);
+void clearBSS(void *bssAddress, uint64_t bssSize) {
+    memset(bssAddress, 0, bssSize);
 }
 
-void * getStackBase() {
-	return (void*)(
-		(uint64_t)&endOfKernel
-		+ PageSize * 8				//The size of the stack itself, 32KiB
-		- sizeof(uint64_t)			//Begin at the top of the stack
-	);
+void *getStackBase() {
+    return (void *) (
+            (uint64_t) & endOfKernel
+                         + PageSize * 8                //The size of the stack itself, 32KiB
+                         - sizeof(uint64_t)            //Begin at the top of the stack
+    );
 }
 
-void * initializeKernelBinary() {
-	void * moduleAddresses[] = {
-		sampleCodeModuleAddress,
-		sampleDataModuleAddress
-	};
+void *initializeKernelBinary() {
+    void *moduleAddresses[] = {
+            sampleCodeModuleAddress,
+            sampleDataModuleAddress
+    };
 
-	loadModules(&endOfKernelBinary, moduleAddresses);
-	clearBSS(&bss, &endOfKernel - &bss);
+    loadModules(&endOfKernelBinary, moduleAddresses);
+    clearBSS(&bss, &endOfKernel - &bss);
 
-	return getStackBase();
+    return getStackBase();
 }
 
 void load_idt();
+
 uint64_t getRSP();
+
 void printBottlerAndWait();
 
 #include "test_util.h"
@@ -62,167 +64,127 @@ void printBottlerAndWait();
 #define MAX_MEMORY 352//1024-42x16 //Should be around 80% of memory managed by the MM
 #endif
 
-typedef struct MM_rq{
-  void *address;
-  uint32_t size;
-}mm_rq;
+typedef struct MM_rq {
+    void *address;
+    uint32_t size;
+} mm_rq;
 
-void test_mm(){
-  mm_rq mm_rqs[MAX_BLOCKS];
-  uint8_t rq;
-  uint32_t total;
+void test_mm() {
+    mm_rq mm_rqs[MAX_BLOCKS];
+    uint8_t rq;
+    uint32_t total;
 
-	int i = 1000;
-  while (i-- != 0){
+    int i = 1000;
+    while (i-- != 0) {
 //   while (1){
-    rq = 0;
-    total = 0;
+        rq = 0;
+        total = 0;
 
-    // Request as many blocks as we can
-    while(rq < MAX_BLOCKS && total < MAX_MEMORY){
-      mm_rqs[rq].size = GetUniform(MAX_MEMORY - total - 1) + 1;
-      mm_rqs[rq].address = pvPortMalloc(mm_rqs[rq].size);
-    //   mm_rqs[rq].address = memMalloc(mm_rqs[rq].size);
-	  if (mm_rqs[rq].address == NULL) {
-		  for (int rqAux = 0; rqAux < rq; rqAux++) {
-		ncPrintDec(mm_rqs[rqAux].size );
-		ncPrint(" - ");
-		  }
-    	// printStringLen(13, "malloc() -- ERROR", 20); 
-		// new_line();
-		ncPrint("Malloc -- null");
-			ncNewline();
-	  }
-      total += mm_rqs[rq].size;
-      rq++;
-    }
-	
-	// 	ncPrint("libre dps de malloc: ");
-	// ncPrintDec(xPortGetFreeHeapSize());
-	// 		ncNewline();
-	// 	ncPrint("cumpli maximo");
-	// 		ncNewline();
+        // Request as many blocks as we can
+        while (rq < MAX_BLOCKS && total < MAX_MEMORY) {
+            mm_rqs[rq].size = GetUniform(MAX_MEMORY - total - 1) + 1;
+            mm_rqs[rq].address = pvPortMalloc(mm_rqs[rq].size);
+            //   mm_rqs[rq].address = memMalloc(mm_rqs[rq].size);
+            if (mm_rqs[rq].address == NULL) {
+                for (int rqAux = 0; rqAux < rq; rqAux++) {
+                    ncPrintDec(mm_rqs[rqAux].size);
+                    ncPrint(" - ");
+                }
+                // printStringLen(13, "malloc() -- ERROR", 20);
+                // new_line();
+                ncPrint("Malloc -- null");
+                ncNewline();
+            }
+            total += mm_rqs[rq].size;
+            rq++;
+        }
 
-    // Set
-    uint32_t i;
-    for (i = 0; i < rq; i++)
-      if (mm_rqs[i].address != NULL)
-        memset(mm_rqs[i].address, i, mm_rqs[i].size);
+        // 	ncPrint("libre dps de malloc: ");
+        // ncPrintDec(xPortGetFreeHeapSize());
+        // 		ncNewline();
+        // 	ncPrint("cumpli maximo");
+        // 		ncNewline();
 
-    // Check
-    for (i = 0; i < rq; i++)
-      if (mm_rqs[i].address != NULL)
-        if(!memcheck(mm_rqs[i].address, i, mm_rqs[i].size)) {
-    		// printStringLen(13, "memCheck() -- ERROR", 20); 
-			// new_line();
-		ncPrint("memCheck -- null");
-			ncNewline();
-		}
+        // Set
+        uint32_t i;
+        for (i = 0; i < rq; i++)
+            if (mm_rqs[i].address != NULL)
+                memset(mm_rqs[i].address, i, mm_rqs[i].size);
 
-    // Free
-    for (i = 0; i < rq; i++) {
-      if (mm_rqs[i].address != NULL)
-        vPortFree(mm_rqs[i].address);
-	}
+        // Check
+        for (i = 0; i < rq; i++)
+            if (mm_rqs[i].address != NULL)
+                if (!memcheck(mm_rqs[i].address, i, mm_rqs[i].size)) {
+                    // printStringLen(13, "memCheck() -- ERROR", 20);
+                    // new_line();
+                    ncPrint("memCheck -- null");
+                    ncNewline();
+                }
+
+        // Free
+        for (i = 0; i < rq; i++) {
+            if (mm_rqs[i].address != NULL)
+                vPortFree(mm_rqs[i].address);
+        }
         // memFree(mm_rqs[i].address);
-	
-	// 	ncPrint("libre dps de free: ");
-	// ncPrintDec(xPortGetFreeHeapSize());
-	// 		ncNewline();
-		ncPrint("termine un loop regio");
-			ncNewline();
 
-	// if (i == 5)
-	// wait(3);
-	// ncClear();
+        // 	ncPrint("libre dps de free: ");
+        // ncPrintDec(xPortGetFreeHeapSize());
+        // 		ncNewline();
+        ncPrint("termine un loop regio");
+        ncNewline();
 
-    // printStringLen(13, "ALL GOOD", 9); 
-	// new_line();
-  } 
+        // if (i == 5)
+        // wait(3);
+        // ncClear();
+
+        // printStringLen(13, "ALL GOOD", 9);
+        // new_line();
+    }
 }
 
 // void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
 void initScheduler();
 
 void _cli();
+
 void _sti();
+
 void haltcpu();
+
 void forceTimer();
 
 int main() {
-	// _cli();
+    // _cli();
 
-	load_idt();
+    load_idt();
 
-	// if (initMemoryManager(memoryModuleAddress, memoryModuleAddress + sizeof(void *)) == -1) {
+    // if (initMemoryManager(memoryModuleAddress, memoryModuleAddress + sizeof(void *)) == -1) {
     // 	printStringLen(13, "createMemoryManager() -- ERROR", 31); 
-	// 	new_line();
-	// 	return EXIT_FAILURE;
-	// }
+    // 	new_line();
+    // 	return EXIT_FAILURE;
+    // }
 
-	initMemoryManager(memoryModuleAddress);
-	initScheduler();
+    initMemoryManager(memoryModuleAddress);
+    initScheduler();
 
-	#ifndef BUDDY
-	// SACAR DESPUÉS! ES SOLO PARA TESTEO... CORRER DE A UNO!
-	// if (testOne() == EXIT_FAILURE)
-	// 	return EXIT_FAILURE;
-	// if (testTwo() == EXIT_FAILURE)
-		// return EXIT_FAILURE;
-	#endif
-		// test_mm();
+#ifndef BUDDY
+    // SACAR DESPUÉS! ES SOLO PARA TESTEO... CORRER DE A UNO!
+    // if (testOne() == EXIT_FAILURE)
+    // 	return EXIT_FAILURE;
+    // if (testTwo() == EXIT_FAILURE)
+    // return EXIT_FAILURE;
+#endif
+    // test_mm();
 
-	saveSampleRSP(getRSP());
-	
+    saveSampleRSP(getRSP());
 
-	// ((EntryPoint)sampleCodeModuleAddress)();
-    char * argv[] = {"SampleCode"};
+    char *argv[] = {"SampleCode"};
     enqueueProcess(sampleCodeModuleAddress, 1, 1, argv, NULL);
-	clear();
-	// haltcpu();
-	_sti();
-	forceTimer();
+    clear();
+    // haltcpu();
+    _sti();
+    forceTimer();
 
-	// printBottlerAndWait();
-	return EXIT_SUCCESS;
-}
-
-void printBottlerAndWait() {
-	printStringLen(4, "                                                                             ", 80); new_line();
-    printStringLen(4, "                                   (%(                                     ", 80); new_line();
-	printStringLen(15, "      Welcome to", 17);
-    printStringLen(4, "                  %%%%%                                      ", 80); new_line();
-	printStringLen(15, "        BottlerOS", 18);
-    printStringLen(4, "                  %%%                                      ", 80); new_line();
-    printStringLen(12, "                              %%%%%%%%%%%%%                                 ", 80); new_line();
-    printStringLen(12, "                          %%%%%%%%%%%%%%%%%%%%%                             ", 80); new_line();
-    printStringLen(12, "                        %%%%%%%           %%%%%%%                           ", 80); new_line();
-    printStringLen(12, "                      %%%%%                   %%%%%                         ", 80); new_line();
-    printStringLen(14, "                     %%%%%                     %%%%%                        ", 80); new_line();
-    printStringLen(14, "                    %%%%% ", 27); 
-	printStringLen(14, " %%%%           %%%% ", 22); 
-	printStringLen(14, " %%%%%                       ", 30); new_line();
-    printStringLen(14, "                    %%%%%  ", 28); 
-	printStringLen(14, " (%             %(  ", 21); 
-	printStringLen(14, " %%%%%                       ", 30); new_line();
-    printStringLen(14, "                    %%%%%%%                   %%%%%%%                       ", 80); new_line();
-    printStringLen(2, "                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                       ", 80); new_line();
-    printStringLen(2, "                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    ", 80); new_line();
-    printStringLen(2, "                %%%%%%%%%%%%%%%%%%%%%%% ", 41); 
-	printStringLen(12, " %  %* ", 8); 
-	printStringLen(2, " %%%%%%%%%                   ", 30); new_line();
-    printStringLen(2, "                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                   ", 80); new_line();
-    printStringLen(9, "                %%**%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/%%                   ", 80); new_line();
-    printStringLen(9, "                %%* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /%%                   ", 80); new_line();
-    printStringLen(9, "                %%* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /%%                   ", 80); new_line();
-    printStringLen(9, "                %%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  %%%                   ", 80); new_line();
-    printStringLen(13, "              ,%%%%%   %%%%%%%%%%%%%%%%%%%%%%%%%%%   %%%%%.                 ", 80); new_line();
-    printStringLen(13, "                %%.         %%%%%%%%%%%%%%%%%         .%%                   ", 80); new_line();
-    printStringLen(13, "                              %%%%%%%%%%%%%                                 ", 80); new_line();
-    printStringLen(13, "                                 %%%%%%%                                    ", 80); new_line();
-    printStringLen(13, "                                                                            ", 80); new_line();
-	
-	// wait(3);
-	
-	clear();
+    return EXIT_SUCCESS;
 }
