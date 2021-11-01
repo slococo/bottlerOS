@@ -36,7 +36,7 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
                 blockIO();
             }
             if (*bufferAux == '\v') {
-                return -1;
+                return 0;
                 // break;
             }
             readBytes++;

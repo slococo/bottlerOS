@@ -44,10 +44,10 @@ int ceil(float num) {
     return inum + 1;
 }
 
-// unsigned int log2(unsigned int n)
-// {
-//     return (n > 1) ? 1 + log2(n / 2) : 0;
-// }
+unsigned int log2(unsigned int n)
+{
+    return (n > 1) ? 1 + log2(n / 2) : 0;
+}
 
 // /* Returns log base 2 of a double d */
 // double log2(double d) {
