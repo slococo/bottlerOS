@@ -1,6 +1,9 @@
 #ifndef PIPES_LIB
 #define PIPES_LIB
 
-void pipes(int argc, char *argv[]);
+#include "libc.h"
+#include "shell.h"
+
+void pipe(int argc, char *argv[]);
 
 #endif

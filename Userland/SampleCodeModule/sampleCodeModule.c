@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     winClear();
 
     char *argv1[] = {"bottler"};
-    sys_loadProcess(bottler, 1, 1, argv1, NULL);
+    sys_loadProcess(bottler, 0, 1, argv1, NULL);
     sys_wait();
 
     char *argv2[] = {"shell"};

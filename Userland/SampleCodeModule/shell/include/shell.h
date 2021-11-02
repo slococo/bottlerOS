@@ -1,5 +1,5 @@
-#ifndef SHELL
-#define SHELL
+#ifndef SHELL_H
+#define SHELL_H
 
 #include "system.h"
 #include "libc.h"
@@ -18,14 +18,18 @@
 #include "wc.h"
 #include "filter.h"
 #include "cat.h"
-#include "semCom.h"
+#include "sems.h"
 #include "stddef.h"
 #include "nice.h"
-#include "phyloLib.h"
+#include "phylo.h"
 #include "kill.h"
 #include "block.h"
 #include "unblock.h"
 #include "loop.h"
+#include "test_prio.h"
+#include "test_sync.h"
+#include "test_processes.h"
+#include "test_mm.h"
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0

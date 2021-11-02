@@ -20,5 +20,6 @@ char unblockFirst(int pid);
 void sleep(int secs);
 char blockIO();
 void unblockIO();
+char getState(int pid);
 
 #endif

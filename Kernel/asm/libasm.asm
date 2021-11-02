@@ -94,4 +94,4 @@ getRegs:
 	ret
 
 section .bss
-	regs resb 120 ; 8 bytes * 16 regs
+	regs resb 120

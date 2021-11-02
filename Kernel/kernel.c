@@ -1,5 +1,4 @@
 #include <stdint.h>
-// #include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <naiveConsole.h>
@@ -29,11 +28,7 @@ void clearBSS(void *bssAddress, uint64_t bssSize) {
 }
 
 void *getStackBase() {
-    return (void *) (
-            (uint64_t) & endOfKernel
-                         + PageSize * 8                //The size of the stack itself, 32KiB
-                         - sizeof(uint64_t)            //Begin at the top of the stack
-    );
+    return (void *) ((uint64_t) &endOfKernel + PageSize * 8 - sizeof(uint64_t));
 }
 
 void *initializeKernelBinary() {
@@ -49,140 +44,24 @@ void *initializeKernelBinary() {
 }
 
 void load_idt();
-
 uint64_t getRSP();
-
-void printBottlerAndWait();
-
-#include "test_util.h"
-
-#ifdef BUDDY
-#define MAX_BLOCKS 128
-#define MAX_MEMORY 800
-#else
-#define MAX_BLOCKS 42//1024/24 //128
-#define MAX_MEMORY 352//1024-42x16 //Should be around 80% of memory managed by the MM
-#endif
-
-typedef struct MM_rq {
-    void *address;
-    uint32_t size;
-} mm_rq;
-
-void test_mm() {
-    mm_rq mm_rqs[MAX_BLOCKS];
-    uint8_t rq;
-    uint32_t total;
-
-    int i = 1000;
-    while (i-- != 0) {
-//   while (1){
-        rq = 0;
-        total = 0;
-
-        // Request as many blocks as we can
-        while (rq < MAX_BLOCKS && total < MAX_MEMORY) {
-            mm_rqs[rq].size = GetUniform(MAX_MEMORY - total - 1) + 1;
-            mm_rqs[rq].address = pvPortMalloc(mm_rqs[rq].size);
-            //   mm_rqs[rq].address = memMalloc(mm_rqs[rq].size);
-            if (mm_rqs[rq].address == NULL) {
-                for (int rqAux = 0; rqAux < rq; rqAux++) {
-                    ncPrintDec(mm_rqs[rqAux].size);
-                    ncPrint(" - ");
-                }
-                // printStringLen(13, "malloc() -- ERROR", 20);
-                // new_line();
-                ncPrint("Malloc -- null");
-                ncNewline();
-            }
-            total += mm_rqs[rq].size;
-            rq++;
-        }
-
-        // 	ncPrint("libre dps de malloc: ");
-        // ncPrintDec(xPortGetFreeHeapSize());
-        // 		ncNewline();
-        // 	ncPrint("cumpli maximo");
-        // 		ncNewline();
-
-        // Set
-        uint32_t i;
-        for (i = 0; i < rq; i++)
-            if (mm_rqs[i].address != NULL)
-                memset(mm_rqs[i].address, i, mm_rqs[i].size);
-
-        // Check
-        for (i = 0; i < rq; i++)
-            if (mm_rqs[i].address != NULL)
-                if (!memcheck(mm_rqs[i].address, i, mm_rqs[i].size)) {
-                    // printStringLen(13, "memCheck() -- ERROR", 20);
-                    // new_line();
-                    ncPrint("memCheck -- null");
-                    ncNewline();
-                }
-
-        // Free
-        for (i = 0; i < rq; i++) {
-            if (mm_rqs[i].address != NULL)
-                vPortFree(mm_rqs[i].address);
-        }
-        // memFree(mm_rqs[i].address);
-
-        // 	ncPrint("libre dps de free: ");
-        // ncPrintDec(xPortGetFreeHeapSize());
-        // 		ncNewline();
-        ncPrint("termine un loop regio");
-        ncNewline();
-
-        // if (i == 5)
-        // wait(3);
-        // ncClear();
-
-        // printStringLen(13, "ALL GOOD", 9);
-        // new_line();
-    }
-}
-
-// void enqueueProcess(void (*fn) (int, char **), char foreground, int argc, char *argv[], int * fd);
 void initScheduler();
-
 void _cli();
-
 void _sti();
-
 void haltcpu();
-
 void forceTimer();
 
 int main() {
-    // _cli();
-
     load_idt();
-
-    // if (initMemoryManager(memoryModuleAddress, memoryModuleAddress + sizeof(void *)) == -1) {
-    // 	printStringLen(13, "createMemoryManager() -- ERROR", 31); 
-    // 	new_line();
-    // 	return EXIT_FAILURE;
-    // }
 
     initMemoryManager(memoryModuleAddress);
     initScheduler();
-
-#ifndef BUDDY
-    // SACAR DESPUÉS! ES SOLO PARA TESTEO... CORRER DE A UNO!
-    // if (testOne() == EXIT_FAILURE)
-    // 	return EXIT_FAILURE;
-    // if (testTwo() == EXIT_FAILURE)
-    // return EXIT_FAILURE;
-#endif
-    // test_mm();
 
     saveSampleRSP(getRSP());
 
     char *argv[] = {"SampleCode"};
     enqueueProcess(sampleCodeModuleAddress, 1, 1, argv, NULL);
     clear();
-    // haltcpu();
     _sti();
     forceTimer();
 

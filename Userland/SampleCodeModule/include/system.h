@@ -30,8 +30,10 @@ void sys_semPost(sem_t *);
 sem_t * sys_semOpen(char *, unsigned int);
 int sys_getPid();
 char sys_semClose(void *);
-void sys_kill(int pid);
-void sys_block(int pid);
-void sys_unblock(int pid);
+char sys_kill(int pid);
+char sys_block(int pid);
+char sys_unblock(int pid);
+void sys_quitCPU();
+void sys_wait();
 
 #endif

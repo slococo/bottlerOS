@@ -10,8 +10,26 @@ typedef struct node_t {
 node_t *firstSem = NULL;
 static char counter = 0;
 
+node_t * searchSem(char * name, node_t ** prev) {
+    *prev = NULL;
+    node_t * aux = firstSem;
+    while (aux != NULL) {
+        if (!strcmp(name, aux->sem->name))
+            break;
+    }
+    return aux;
+}
+
 sem_t *semOpen(char *name, unsigned int value) {
     enter_region(&semLock);
+
+    node_t * prev = NULL;
+    node_t * aux = searchSem(name, &prev);
+
+    if (aux != NULL) {
+        leave_region(&semLock);
+        return aux->sem;
+    }
 
     sem_t *sem = pvPortMalloc(sizeof(sem_t));
     node_t *node = pvPortMalloc(sizeof(node_t));
@@ -74,6 +92,8 @@ char semClose(sem_t *sem) {
     return EXIT_SUCCESS;
 }
 
+#include "video.h"
+
 void semWait(sem_t *sem) {
     enter_region(&semLock);
 
@@ -109,8 +129,10 @@ void semPost(sem_t *sem) {
         sem->entering = sem->entering->next;
         if (sem->entering == NULL)
             sem->last = NULL;
-        unblock(aux->pid);
+        leave_region(&semLock);
+        unblockFirst(aux->pid);
         vPortFree(aux);
+        enter_region(&semLock);
     }
 
     leave_region(&semLock);

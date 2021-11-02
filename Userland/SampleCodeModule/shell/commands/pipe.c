@@ -1,7 +1,6 @@
-#include "libc.h"
-#include "shell.h"
+#include "pipes.h"
 
-void pipes(int argc, char *argv[]) {
+void pipe(int argc, char *argv[]) {
     char * output = sys_pipes();
     printString(output);
     newline();

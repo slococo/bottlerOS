@@ -14,15 +14,19 @@ cmd_t commands[] = {
         {"cpufeatures", cpufeatures, 0, 1},
         {"nice",        nice,        0, 1},
         {"ps",          ps,          0, 1},
-        {"pipes",       pipes,       0, 1},
+        {"pipe",        pipe,        0, 1},
         {"kill",        kill,        1, 1},
         {"sem",         sem,         0, 1},
         {"quadratic",   quadratic,   0, 1},
         {"printmem",    printmem,    0, 1},
         {"phylo",       phylo,       0, 1},
         {"wc",          wc,          0, 1},
-        {"loop",        loop,        0, 0},
-        {"loopcaca",    loop,        0, 1},
+        {"loop",        loop,        0, 1},
+        {"test_mm",          test_mm,           0, 1},
+        {"test_prio",        test_prio,         0, 1},
+        {"test_processes",   test_processes,    0, 1},
+        {"test_sync",        test_sync,         0, 1},
+        {"test_no_sync",     test_no_sync,      0, 1},
         {NULL,          NULL,        0, 0}
 };
 
@@ -112,6 +116,10 @@ void processInput(char *input) {
     if (comm_flag0 && pipe != -1) {
         for (int i = 0; commands[i].name != NULL; i++) {
             if (!strcmp(tokens[pipe + 1], commands[i].name)) {
+                if (commands->isBuiltIn && ampersand) {
+                    printStringLen("built-in commands are not able to run in background\n", 53);
+                    return;
+                }
                 comm_flag1 = 1;
                 comm1 = i;
                 break;
@@ -151,7 +159,7 @@ void shell(int argc, char *argv[]) {
     char buffer[SIZE] = {0};
 
     while (scanfNoPrint(buffer) != 0) {
-        new_line();
+        newline();
         processInput(buffer);
         printStringLen("$> ", 3);
     }
@@ -165,5 +173,5 @@ void incorrect_comm(char *buffer) {
 void incorrect_arg(char *command) {
     printStringLen("Incorrect arguments for command ", 33);
     printString(command);
-    new_line();
+    newline();
 }

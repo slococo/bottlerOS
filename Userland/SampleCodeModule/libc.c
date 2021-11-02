@@ -42,12 +42,16 @@ void putChar(char c) {
     sys_write(1, &buffer, 0);
 }
 
-void new_line() {
+void newline() {
     putChar('\n');
 }
 
 void backspace() {
     putChar('\b');
+}
+
+void addEOF() {
+    putChar(-1);
 }
 
 void winClear() {

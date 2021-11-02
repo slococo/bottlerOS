@@ -1,268 +1,231 @@
 #ifdef BUDDY
-// #include <stdio.h>
+
+// Basado en: https://github.com/cloudwu/buddy/blob/master/buddy.c
+
 #include <stdlib.h>
-// #include <time.h>
-// #include <math.h>
-#include <string.h>
-#define MANAGED_MEMORY_SIZE 1024
+#include <stddef.h>
+#include <stdint.h>
 
-// https://github.com/sdpetrides/BuddyAllocator
+#define NODE_UNUSED 0
+#define NODE_USED 1	
+#define NODE_SPLIT 2
+#define NODE_FULL 3
 
-// char initMemoryManager(void *const restrict memoryForMemoryManager, void *const restrict managedMemory) {
-//     return 1;
-// }
+#define LEVEL 20
 
-// void * memMalloc(const size_t memoryToAllocate) {
-//     return NULL;
-// }
+#define SIZE (1<<LEVEL)
 
-typedef struct meta {
-    unsigned char allo : 1;		// 0000000_ - allocated
-    unsigned char left : 1;		// 000000_0 - first or second
-    unsigned char size : 6;		// ______00 - n where (2^n)-1 is the block size
-} Meta;
+struct buddy{
+	int level;
+	uint8_t tree[SIZE*2-1];
+};
 
-// static char myblock[MANAGED_MEMORY_SIZE];
-static char *myblock;
-void initMemoryManager(void * managedMemory) {
-    myblock = managedMemory;
+static struct buddy self;
+
+void * buddy_alloc(int);
+int buddy_free(void *);
+
+void * pvPortMalloc(int size){
+	return buddy_alloc(size);
 }
 
-void unpack(Meta * m, int pos);
-
-/* Fills myblock with zeros and creates first metadata */
-void init_block() {
-    memset(&myblock, '\0', MANAGED_MEMORY_SIZE);
-    memset(&myblock, 54, 1);
+int vPortFree(void * pointer){
+	return buddy_free(pointer);
 }
 
-int ceil(float num) {
-    int inum = (int)num;
-    if (num == (float)inum) {
-        return inum;
-    }
-    return inum + 1;
+static int heapAddress = 0;
+
+void initMemoryManager(void *managedMemSize) {
+    heapAddress = (int) managedMemSize;
+	self.level = LEVEL;
+	memset(self.tree , NODE_UNUSED , SIZE*2-1);
 }
 
-unsigned int log2(unsigned int n)
-{
-    return (n > 1) ? 1 + log2(n / 2) : 0;
+int is_pow_of_2(uint32_t x) {
+	return !(x & (x-1));
 }
 
-// /* Returns log base 2 of a double d */
-// double log2(double d) {
-//     return log(d) / log(2);
-// }
-
-/* Returns the level a reqSize will fit in */
-int size_to_n(size_t reqSize) {
-    reqSize+=1;
-    double d = log2((double)reqSize);
-    return (int)ceil(d);
+uint32_t next_pow_of_2(uint32_t x) {
+	if ( is_pow_of_2(x) )
+		return x;
+	x |= x>>1;
+	x |= x>>2;
+	x |= x>>4;
+	x |= x>>8;
+	x |= x>>16;
+	return x+1;
 }
 
-/* Returns the position of the next block of the correct size */
-int jump_next(int n, int pos) {
-    int bits = pos>>(n);
-    bits+=1;
-    int ret = bits<<(n);
+#define PAGE_SIZE 0x1000
 
-    if (ret == MANAGED_MEMORY_SIZE) {
-        return ret;
-    } else {
-        return ret;
-    }
-
+int _index_offset(int index, int level, int max_level) {
+	return (int*)((((index + 1) - (1 << level)) << (max_level - level)) * PAGE_SIZE + heapAddress);
 }
 
-/* Returns the position of the left half of a pair */
-int jump_back(int n, int pos) {
-    int bits = pos>>(n);
-    bits-=1;
-    return bits<<(n);
+void _mark_parent(int index) {
+
+	while(1) {
+		int buddy = index - 1 + (index & 1) * 2;
+		if (buddy > 0 && (self.tree[buddy] == NODE_USED ||	self.tree[buddy] == NODE_FULL)) {
+			index = (index + 1) / 2 - 1;
+			self.tree[index] = NODE_FULL;
+		} else {
+			return;
+		}
+	}
 }
 
-/* Fills a Meta struct with metadata at pos */
-void unpack(Meta * m, int pos) {
-    memset(m, myblock[pos], 1);
+void * buddy_alloc(int s) {
+
+	if(s%PAGE_SIZE != 0){
+		s=(s/PAGE_SIZE)+1;
+	}else{
+		s/=PAGE_SIZE;
+	}
+	int size;
+	if (s==0) {
+		size = 1;
+	} else {
+		size = (int)next_pow_of_2(s);
+	}
+	int length = 1 << self.level;
+
+	if (size > length)
+		return NULL;
+
+	int index = 0;
+	int level = 0;
+	int nextStep = 1;
+
+	while (index >= 0) {
+		nextStep = 1;
+		if (size == length) {
+			if (self.tree[index] == NODE_UNUSED) {
+				self.tree[index] = NODE_USED;
+				_mark_parent(index);
+				return _index_offset(index, level, self.level);
+			}
+		} else {
+			switch (self.tree[index]) {
+				case NODE_USED: break;
+				case NODE_FULL: break;
+				case NODE_UNUSED:
+					self.tree[index] = NODE_SPLIT;
+					self.tree[index*2+1] = NODE_UNUSED;
+					self.tree[index*2+2] = NODE_UNUSED;
+				default:
+					index = index * 2 + 1;
+					length /= 2;
+					level++;
+					nextStep = 0;
+			}
+		}
+		if( nextStep ){
+			if (index & 1) {
+				++index;
+			} else {
+				int cont = 1;
+				while(cont) {
+					level--;
+					length *= 2;
+					index = (index+1)/2 -1;
+					if (index < 0)
+						return NULL;
+					if (index & 1) {
+						++index;
+						cont = 0;
+					}
+				}
+			}
+
+		}
+	}
+
+	return NULL;
 }
 
-/* Returns whether position at level n is left or right partner */
-int is_left(int n, int pos) {
-
-    // Manipulate bits to set nth bit on
-    int k = 1;
-    k<<=(n);
-
-    // Manipulate bits to zero bits above n
-    unsigned int p = (unsigned int)pos;
-    p<<=(31-n);
-    p>>=(31-n);
-
-    if (k == p) {
-        return 0;	// Right
-    } else {
-        return 1;	// Left
-    }
+void _combine(int index) {
+	while(1) {
+		int buddy = index - 1 + (index & 1) * 2;
+		if (buddy < 0 || self.tree[buddy] != NODE_UNUSED) {
+			self.tree[index] = NODE_UNUSED;
+			while (((index = (index + 1) / 2 - 1) >= 0) &&  self.tree[index] == NODE_FULL){
+				self.tree[index] = NODE_SPLIT;
+			}
+			return;
+		}
+		index = (index + 1) / 2 - 1;
+	}
 }
 
-/*  Mergee two unallocated blocks with same size */
-void merge(int pos, int pos2, int n) {
+int buddy_free(void * pointer) {
 
-    // Create new meta and set size field
-    char newMeta = (n+1)<<2;
+	int offset=(int)pointer;
 
-    // Set left field
-    if (is_left(n+1, pos)) {
-        newMeta+=2;
-    }
+	offset=(offset- heapAddress)/PAGE_SIZE;
 
-    // Add new meta
-    myblock[pos] = newMeta;
 
-    // Delete meta on right partner
-    myblock[pos2] = 0;
+	if (offset >= (1<< self.level)){
+		return -1;
+	}	
+	int left = 0;
+	int length = 1 << self.level;
+	int index = 0;
+
+	while(1) {
+		switch (self.tree[index]) {
+			case NODE_USED:
+				if (offset != left){
+					return -1;
+				}	
+				_combine(index);
+				return 0;
+			case NODE_UNUSED:
+				return -1;
+			default:
+				length /= 2;
+				if (offset < left + length) {
+					index = index * 2 + 1;
+				} else {
+					left += length;
+					index = index * 2 + 2;
+				}
+				break;
+			}
+	}
 }
 
-/* MYmymalloc */
-void * pvPortMalloc(size_t reqSize) {
-
-    // Check if too big
-    if (reqSize > MANAGED_MEMORY_SIZE - 1) {
-        // fprintf(stderr, "Error: Requested size too large\n");
-        return NULL;
-    }
-
-    // Traverse heap to find block of correct size - algo(n)
-    int n = size_to_n(reqSize);
-    int pos = 0;
-    unsigned char c = 0;
-    Meta * m = memset(&c, 0, 1);
-
-    while (pos < MANAGED_MEMORY_SIZE) {
-        // Read metadata
-        unpack(m, pos);
-
-        // // Debugging
-        // if (m->size == 0) {
-        // 	exit(0);
-        // }
-
-        if (n <= m->size) {
-            if (m->allo == 1) {
-                // Jump
-                pos = jump_next(n, pos);
-                continue;
-            } else if (m->size == n) {
-                // Allocate
-                myblock[pos]+=1;
-                pos+=1;
-                return (void*)((long int)&myblock+pos);
-            } else {
-                // Partition
-
-                // Get partner position
-                int partner = jump_next((m->size)-1, pos);
-
-                // Set Left
-                char meta_1 = 2;
-                char meta_2 = 0;
-
-                // Set Size
-                char s = ((m->size)-1)<<2;
-                meta_1 = (meta_1 | s);
-                meta_2 = (meta_2 | s);
-
-                // Fill in metadata
-                myblock[pos] = meta_1;
-                myblock[partner] = meta_2;
-
-                // Continue on same position with new size of block
-                continue;
-            }
-        } else {
-            // Jump
-            pos = jump_next(n, pos);
-            continue;
-        }
-    }
-
-    //error
-
-    return 0;
+static void dumpMM(struct buddy * self, int index , int level) {
+    char buffer[100];
+	switch (self->tree[index]) {
+	case NODE_UNUSED:
+		printStringLen("(%d:%d)", _index_offset(index, level, self->level) , 1 << (self->level - level));
+		break;
+	case NODE_USED:
+		printStringLen("(", 1);
+		printStringLen(itoa(_index_offset(index, level, self->level), buffer, 10));
+		printStringLen(":", 1);
+        printStringLen(itoa(1 << (self->level - level), buffer, 10));
+		printStringLen(")", 1);
+		break;
+	case NODE_FULL:
+		printStringLen("{", 1);
+		_dump(self, index * 2 + 1, level+1);
+		_dump(self, index * 2 + 2, level+1);
+		printStringLen("}", 1);
+		break;
+	default:
+		printStringLen("(", 1);
+		_dump(self, index * 2 + 1, level+1);
+		_dump(self, index * 2 + 2, level+1);
+		printStringLen(")", 1);
+		break;
+	}
 }
 
-/* MYmyfree */
-void vPortFree(void * ptr) {
-
-    // Error Checking
-    if (ptr <= (void *)&myblock || ptr > (void *)(&myblock + MANAGED_MEMORY_SIZE)) {
-        //error
-        return;
-    }
-
-    // Get position
-    // int pos = (int)(ptr-(void *)&myblock-1);
-    int pos = (int)((char *)ptr-(char *)&myblock-1);
-
-    // Check if valid metadata location
-    if (pos%2 == 1 || myblock[pos] == 0) {
-        //error
-        return;
-    }
-
-
-    // Initialize variables for merge
-    unsigned char c1 = 0;
-    unsigned char c2 = 0;
-    Meta * m1 = memset(&c1, 0, 1);
-    Meta * m2 = memset(&c2, 0, 1);
-    unpack(m1,pos);
-
-    // Change allocated field
-    myblock[pos] = myblock[pos] - 1;
-
-    while (pos >= 0 && pos <= 8196){
-        // Read metadata
-        unpack(m1,pos);
-
-        if (m1->left) {	// Left Partner
-
-            // Get position of other partner and read metadata
-            int pos2 = jump_next(m1->size, pos);
-
-            if (pos2 >= 0 && pos2 <= MANAGED_MEMORY_SIZE - 2) {
-                unpack(m2,pos2);
-            } else {
-                break;
-            }
-
-            // Merge or break
-            if (m2->allo || m2->size != m1->size) {
-                break;
-            } else {
-                merge(pos, pos2, m1->size);
-            }
-
-        } else {		// Right Partner
-
-            // Get position of other partner and read metadata
-            int pos2 = jump_back(m2->size,pos);
-
-            if (pos2 >= 0 && pos2 <= MANAGED_MEMORY_SIZE -2) {
-                unpack(m2,pos2);
-            } else {
-                break;
-            }
-
-            // Merge or break
-            if (m2->allo || m2->size != m1->size) {
-                break;
-            } else {
-                merge(pos2, pos, m1->size);
-            }
-        }
-    }
+void buddy_dumpMM(struct buddy * self) {
+	dumpMM(self, 0 , 0);
+	printStringLen("\n", 1);
 }
 
 #endif

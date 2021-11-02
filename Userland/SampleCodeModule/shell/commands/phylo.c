@@ -1,4 +1,4 @@
-#include "phylo.h"
+#include "phyloLib.h"
 
 philosopher_t *firstPhil;
 sem_t *mutex;
@@ -154,7 +154,6 @@ void phylo(int argc, char ** argv) {
     } while (phil != firstPhil);
     
     char c;
-    // while (1)  {
     while ((c = getChar()) != 0 && c != -1) {
         if (c == 'a') {
             addPhilo();
@@ -165,8 +164,8 @@ void phylo(int argc, char ** argv) {
         else if (c == 'q') {
             end();
         }
+        // sys_sleep(1);
     }
-    // }
     sys_exit();
 }
 
@@ -195,6 +194,6 @@ void end() {
 }
 
 /*
- * Taken from "Operating Systems - Design and Implementation" by Tanenbaum
- * Section 2.3, page 91, Figure 2-10
+ * Inspirados en "Operating Systems - Design and Implementation" de Tanenbaum
+ * Sección 2.3, pág. 91
 */

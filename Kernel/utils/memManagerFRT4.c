@@ -188,14 +188,6 @@ void *pvPortMalloc(size_t xWantedSize) {
             }
         } else {
 
-            // ncNewline();
-            // ncPrint("MALLOC: ");
-            // ncPrintDec(xFreeBytesRemaining);
-            // ncPrint(" ");
-            // ncPrintDec(xWantedSize);
-            // ncPrint(" ");
-            // ncPrintDec(configADJUSTED_HEAP_SIZE);
-            // ncNewline();
         }
     }
 
@@ -227,12 +219,12 @@ void vPortFree(void *pv) {
                 allocated. */
                 pxLink->xBlockSize &= ~xBlockAllocatedBit;
 
-                {
+                // {
                     /* Add this block to the list of free blocks. */
                     xFreeBytesRemaining += pxLink->xBlockSize;
                     prvInsertBlockIntoFreeList(((BlockLink_t *) pxLink));
                     xNumberOfSuccessfulFrees++;
-                }
+                // }
             }
         }
     }

@@ -13,5 +13,6 @@ char * itoa(int value, char * buffer, int base, int length);
 void strlen(const char *str, int *len);
 int strcpy(char * strDest, const char * strSrc);
 char addSpaces(char * str, char qty);
+int strcmp(const char *s1, const char *s2);
 
 #endif

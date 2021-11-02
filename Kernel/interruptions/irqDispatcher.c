@@ -1,9 +1,4 @@
-#include <stdint.h>
-
-static void int_20();
-static void int_21();
-void keyboard_handler();
-void timer_handler();
+#include "irqDispatcher.h"
 
 void irqDispatcher(uint64_t irq) {
     switch (irq) {

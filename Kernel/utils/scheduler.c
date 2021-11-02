@@ -58,7 +58,7 @@ uint64_t nextProcess(uint64_t currentRSP) {
         currentProcess->rsp = currentRSP;
     processCDT *prev = currentProcess;
     if (currentProcess != NULL && currentProcess->state == READY &&
-        currentProcess->executions == MAX_PRIORITY - currentProcess->priority + 1) {
+        currentProcess->executions == MAX_PRIORITY - currentProcess->priority) {
         currentProcess->executions = 0;
         currentProcess = currentProcess->next;
     }
@@ -115,8 +115,7 @@ int enqueueProcess(void (*fn)(int, char **), char foreground, int argc, char *ar
         block(IDLE_PID);
 
     if (currentProcess != NULL) {
-        if (foreground)
-            currentProcess->children++;
+        currentProcess->children++;
         if (currentProcess->foreground && foreground) {
             currentProcess->foreground = 0;
             currentProcess->backWait = 1;
@@ -230,18 +229,9 @@ void unblockIO() {
 char blockIO() {
     if (currentProcess == NULL || currentProcess->state == DEAD)
         return EXIT_FAILURE;
-    else {
-        currentProcess->state = BLOCKEDIO;
-    }
-
-    // processCDT *prev = NULL;
-    // processADT parent = searchProcess(&prev, currentProcess->ppid, firstProcess);
-    // if (currentProcess->foreground) {
-    //     if (parent->backWait) {
-    //         parent->backWait = 0;
-    //         parent->foreground = 1;
-    //     }
-    // }
+    
+    currentProcess->state = BLOCKEDIO;
+    currentProcess->executions = 0;
     forceTimer();
 
     return EXIT_SUCCESS;
@@ -264,6 +254,7 @@ char block(int pid) {
         }
     }
     if (pid == currentProcess->pid) {
+        currentProcess->executions = 0;
         forceTimer();
     }
 
@@ -275,9 +266,9 @@ char unblock(int pid) {
     processADT del = searchProcess(&prev, pid, firstProcess);
     if (del == NULL || del->state == DEAD) {
         return EXIT_FAILURE;
-    } else {
-        del->state = READY;
     }
+    
+    del->state = READY;
 
     processADT parent = searchProcess(&prev, del->ppid, firstProcess);
     if (del->foreground) {
@@ -289,6 +280,46 @@ char unblock(int pid) {
     return EXIT_SUCCESS;
 }
 
+char unblockFirst(int pid) {
+    processADT prev = NULL;
+    processADT del = searchProcess(&prev, pid, firstProcess);
+    if (del == NULL || del->state == DEAD) {
+        return EXIT_FAILURE;
+    }
+
+    removeProcess(del, &firstProcess, &lastProcess);
+    if (currentProcess != NULL) {
+        currentProcess->executions = MAX_PRIORITY - currentProcess->priority;
+        del->next = currentProcess->next;
+        currentProcess->next = del;
+        if (currentProcess == lastProcess)
+            lastProcess = del;
+    }
+    else {
+        if (firstProcess == NULL) {
+            del->next = NULL;
+            firstProcess = del;
+            lastProcess = del;
+        }
+        else {
+            del->next = firstProcess->next;
+            firstProcess = del;
+        }
+    }
+
+    del->state = READY;
+    
+    processADT parent = searchProcess(&prev, del->ppid, firstProcess);
+    if (del->foreground) {
+        if (parent->foreground) {
+            parent->backWait = 1;
+            parent->foreground = 0;
+        }
+    }
+    forceTimer();
+    return EXIT_SUCCESS;
+}
+
 char kill(int pid) {
     processADT prev = NULL;
     processADT del = searchProcess(&prev, pid, firstProcess);
@@ -297,19 +328,21 @@ char kill(int pid) {
     }
     processADT parent = searchProcess(&prev, del->ppid, firstProcess);
 
-    if (parent != NULL && del->foreground) {
+    if (parent != NULL) {
         parent->children--;
         if (!parent->children && parent->state == WAITING) {
             parent->state = READY;
         }
-        if (parent->backWait) {
+        if (parent->backWait && del->foreground) {
             parent->backWait = 0;
             parent->foreground = 1;
         }
     }
 
     vPortFree(del->fd);
-    vPortFree((void *) del->rbp - STACK_SIZE);
+    vPortFree(del->name);
+    void *auxi = del->rbp - STACK_SIZE;
+    vPortFree((void *) auxi);
     del->state = DEAD;
 
     if (pid == currentProcess->pid) {
@@ -367,15 +400,27 @@ char updateRSP(uint64_t newRsp) {
 
 int getPid() {
     if (currentProcess == NULL)
-        return EXIT_FAILURE;
+        return -1;
     return currentProcess->pid;
+}
+
+char getState(int pid){
+    processCDT * aux = firstProcess;
+    while (aux != NULL) {
+        if (aux->pid == pid){
+            break;
+        }
+        aux = aux -> next;
+    }
+    return aux == NULL ? -1 : aux->state;
 }
 
 char quitCPU() {
     int pid = getPid();
-    if (pid == EXIT_FAILURE)
+    if (pid == -1)
         return EXIT_FAILURE;
     // return block(pid);
+    currentProcess->executions = MAX_PRIORITY - currentProcess->priority;
     forceTimer();
     return EXIT_SUCCESS;
 }

@@ -1,9 +1,4 @@
-#include <stdint.h>
-#include "systemCalls.h"
-#include "memManager.h"
-#include "pipeLib.h"
-#include "semLib.h"
-#include "schedulerLib.h"
+#include "systemCallsDispatcher.h"
 
 uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9) {
     switch (rdi) {
@@ -59,6 +54,8 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             return wait();
         case 22:
             return pipes();
+        case 23:
+            return quitCPU();
         default:
             return -1;
     }

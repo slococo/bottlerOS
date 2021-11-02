@@ -19,8 +19,6 @@ GLOBAL _exception6Handler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN systemCallsDispatcher
-; EXTERN preserveStack
-; EXTERN newStack
 EXTERN changeWindow
 EXTERN updateRSP
 EXTERN nextProcess
@@ -28,7 +26,6 @@ EXTERN nextProcess
 GLOBAL switchContext
 GLOBAL loadProcess
 GLOBAL _initialize_stack_frame
-;GLOBAL _switchContext, forceTimerAux
 
 EXTERN getFPUaddress, getSSEaddress
 EXTERN checkSleeping
@@ -76,10 +73,9 @@ SECTION .text
 	fsave [bytesForFPU]
 	fxsave [bytesForSSEAligned]
 
-	mov rdi, %1 ; pasaje de parametro
+	mov rdi, %1
 	call irqDispatcher
 
-	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
 
@@ -99,7 +95,7 @@ SECTION .text
 
 	pushState
 
-	mov rdi, %1 ; pasaje de parametro
+	mov rdi, %1
 	mov rsi, [insPointer]
 	mov rdx, [rspPointer]
 	mov rcx, rsp
@@ -168,7 +164,7 @@ picMasterMask:
 picSlaveMask:
 	push    rbp
     mov     rbp, rsp
-    mov     ax, di  ; ax = mascara de 16 bits
+    mov     ax, di
     out	0A1h,al
     pop     rbp
     retn
