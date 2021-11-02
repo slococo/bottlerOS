@@ -1,48 +1,6 @@
 #ifndef BUDDY
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <assert.h>
-#include <string.h>
-#include <naiveConsole.h>
-
-#define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
-
-#define portCHAR        char
-#define portFLOAT        float
-#define portDOUBLE        double
-#define portLONG        long
-#define portSHORT        short
-#define portSTACK_TYPE    uint32_t
-#define portBASE_TYPE    long
-
-typedef portSTACK_TYPE StackType_t;
-typedef long BaseType_t;
-typedef unsigned long UBaseType_t;
-
-#define configSUPPORT_STATIC_ALLOCATION         1
-#define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   1024 * 1024 * 512
-#define configAPPLICATION_ALLOCATED_HEAP        0
-#define portBYTE_ALIGNMENT 8
-// #define portBYTE_ALIGNMENT 16
-#define portBYTE_ALIGNMENT_MASK ( 0x0007 ) // 8
-// #define portBYTE_ALIGNMENT_MASK ( 0x000F ) // 16
-#define pdFALSE            ( ( BaseType_t ) 0 )
-#define pdTRUE            ( ( BaseType_t ) 1 )
-#define portPOINTER_SIZE_TYPE uint32_t
-
-/* A few bytes might be lost to byte aligning the heap start address. */
-#define configADJUSTED_HEAP_SIZE    ( configTOTAL_HEAP_SIZE - portBYTE_ALIGNMENT )
-#define heapBITS_PER_BYTE        ( ( size_t ) 8 )
-#define heapMINIMUM_BLOCK_SIZE    ( ( size_t ) ( xHeapStructSize << 1 ) )
-
-/* Define the linked list structure.  This is used to link free blocks in order
-of their memory address. */
-typedef struct A_BLOCK_LINK {
-    struct A_BLOCK_LINK *pxNextFreeBlock;    /*<< The next free block in the list. */
-    size_t xBlockSize;                        /*<< The size of the free block. */
-} BlockLink_t;
+#include "memManagerFRT4.h"
 
 static uint8_t *ucHeap;
 
@@ -50,42 +8,9 @@ void initMemoryManager(void *managedMemory) {
     ucHeap = managedMemory;
 }
 
-/* Definition of the Heap_stats_t structure. */
-typedef struct xHeapStats {
-    size_t xAvailableHeapSpaceInBytes;      /* The total heap size currently available - this is the sum of all the free blocks, not the largest block that can be allocated. */
-    size_t xSizeOfLargestFreeBlockInBytes;    /* The maximum size, in bytes, of all the free blocks within the heap at the time vPortGetHeapStats() is called. */
-    size_t xSizeOfSmallestFreeBlockInBytes; /* The minimum size, in bytes, of all the free blocks within the heap at the time vPortGetHeapStats() is called. */
-    size_t xNumberOfFreeBlocks;        /* The number of free memory blocks within the heap at the time vPortGetHeapStats() is called. */
-    size_t xMinimumEverFreeBytesRemaining;    /* The minimum amount of total free memory (sum of all free blocks) there has been in the heap since the system booted. */
-    size_t xNumberOfSuccessfulAllocations;    /* The number of calls to pvPortMalloc() that have returned a valid memory block. */
-    size_t xNumberOfSuccessfulFrees;    /* The number of calls to vPortFree() that has successfully freed a block of memory. */
-} HeapStats_t;
-
-/* Prototype of the vPortGetHeapStats() function. */
-void vPortGetHeapStats(HeapStats_t *xHeapStats);
-
-/*-----------------------------------------------------------*/
-
-/*
- * Inserts a block of memory that is being freed into the correct position in
- * the list of free memory blocks.  The block being freed will be merged with
- * the block in front it and/or the block behind it if the memory blocks are
- * adjacent to each other.
- */
-static void prvInsertBlockIntoFreeList(BlockLink_t *pxBlockToInsert);
-
-/*
- * Called automatically to setup the required heap structures the first time
- * pvPortMalloc() is called.
- */
-static void prvHeapInit(void);
-
-/*-----------------------------------------------------------*/
-
 /* The size of the structure placed at the beginning of each allocated memory
 block must by correctly byte aligned. */
-static const size_t xHeapStructSize =
-        (sizeof(BlockLink_t) + ((size_t)(portBYTE_ALIGNMENT - 1))) & ~((size_t)portBYTE_ALIGNMENT_MASK);
+static const size_t xHeapStructSize = (sizeof(BlockLink_t) + ((size_t)(portBYTE_ALIGNMENT - 1))) & ~((size_t)portBYTE_ALIGNMENT_MASK);
 
 /* Create a couple of list links to mark the start and end of the list. */
 static BlockLink_t xStart, *pxEnd = NULL;
@@ -130,7 +55,6 @@ void *pvPortMalloc(size_t xWantedSize) {
             if ((xWantedSize & portBYTE_ALIGNMENT_MASK) != 0x00) {
                 /* Byte alignment required. */
                 xWantedSize += (portBYTE_ALIGNMENT - (xWantedSize & portBYTE_ALIGNMENT_MASK));
-                // configASSERT( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) == 0 );
             }
         }
 
@@ -163,7 +87,6 @@ void *pvPortMalloc(size_t xWantedSize) {
                     cast is used to prevent byte alignment warnings from the
                     compiler. */
                     pxNewBlockLink = (void *) (((uint8_t *) pxBlock) + xWantedSize);
-                    // configASSERT( ( ( ( size_t ) pxNewBlockLink ) & portBYTE_ALIGNMENT_MASK ) == 0 );
 
                     /* Calculate the sizes of two blocks split from the
                     single block. */
@@ -191,7 +114,6 @@ void *pvPortMalloc(size_t xWantedSize) {
         }
     }
 
-    // configASSERT( ( ( ( size_t ) pvReturn ) & ( size_t ) portBYTE_ALIGNMENT_MASK ) == 0 );
     return pvReturn;
 }
 
@@ -219,12 +141,10 @@ void vPortFree(void *pv) {
                 allocated. */
                 pxLink->xBlockSize &= ~xBlockAllocatedBit;
 
-                // {
                     /* Add this block to the list of free blocks. */
                     xFreeBytesRemaining += pxLink->xBlockSize;
                     prvInsertBlockIntoFreeList(((BlockLink_t *) pxLink));
                     xNumberOfSuccessfulFrees++;
-                // }
             }
         }
     }
@@ -379,6 +299,41 @@ void vPortGetHeapStats(HeapStats_t *pxHeapStats) {
     pxHeapStats->xNumberOfSuccessfulAllocations = xNumberOfSuccessfulAllocations;
     pxHeapStats->xNumberOfSuccessfulFrees = xNumberOfSuccessfulFrees;
     pxHeapStats->xMinimumEverFreeBytesRemaining = xMinimumEverFreeBytesRemaining;
+}
+
+
+/*
+// Definition of the Heap_stats_t structure.
+typedef struct xHeapStats {
+    size_t xAvailableHeapSpaceInBytes;      // The total heap size currently available - this is the sum of all the free blocks, not the largest block that can be allocated.
+    size_t xSizeOfLargestFreeBlockInBytes;    // The maximum size, in bytes, of all the free blocks within the heap at the time vPortGetHeapStats() is called. 
+    size_t xSizeOfSmallestFreeBlockInBytes; // The minimum size, in bytes, of all the free blocks within the heap at the time vPortGetHeapStats() is called. 
+    size_t xNumberOfFreeBlocks;        // The number of free memory blocks within the heap at the time vPortGetHeapStats() is called. 
+    size_t xMinimumEverFreeBytesRemaining;    // The minimum amount of total free memory (sum of all free blocks) there has been in the heap since the system booted. 
+    size_t xNumberOfSuccessfulAllocations;    // The number of calls to pvPortMalloc() that have returned a valid memory block. 
+    size_t xNumberOfSuccessfulFrees;    // The number of calls to vPortFree() that has successfully freed a block of memory. 
+} HeapStats_t;
+*/
+
+
+char *dumpMM() {
+    char *ans = pvPortMalloc(DUMP_MAX_SIZE);
+    char *ret = ans;
+
+    HeapStats_t * heapStats = pvPortMalloc(sizeof(HeapStats_t));
+    vPortGetHeapStats(heapStats);
+
+    char buffer[20] = {0};
+    ans += strcpy(ans, "Free memory: ");
+    ans += strcpy(ans, itoa(heapStats->xAvailableHeapSpaceInBytes, buffer, 10, 20));
+    ans += strcpy(ans, "\nTotal memory: ");
+    ans += strcpy(ans, itoa(configTOTAL_HEAP_SIZE, buffer, 10, 20));
+    ans += strcpy(ans, "\nmallocs: ");
+    ans += strcpy(ans, itoa(heapStats->xNumberOfSuccessfulAllocations, buffer, 10, 20));
+    ans += strcpy(ans, "\nfrees: ");
+    ans += strcpy(ans, itoa(heapStats->xNumberOfSuccessfulFrees, buffer, 10, 20));   
+    vPortFree(heapStats);
+    return ret;
 }
 
 

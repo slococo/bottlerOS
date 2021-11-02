@@ -2,13 +2,11 @@
 #define MEM_MANAGER_H
 
 #include <stdlib.h>
+#define DUMP_MAX_SIZE 100
 
 void initMemoryManager(void * managedMemory);
-void * memMalloc(unsigned nbytes);
-void memFree(void *ap);
-// void * memMalloc(const size_t memoryToAllocate);
-void * pvPortMalloc(size_t xWantedSize);
+void *pvPortMalloc(size_t xWantedSize);
 void vPortFree( void *pv );
-size_t xPortGetFreeHeapSize( void );
+char *dumpMM();
 
 #endif

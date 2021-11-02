@@ -5,7 +5,6 @@
 #include "video.h"
 #include "keyboard.h"
 #include "time.h"
-#include "pcb.h"
 #include "memManager.h"
 
 extern uint8_t text;
@@ -56,8 +55,6 @@ int main() {
 
     initMemoryManager(memoryModuleAddress);
     initScheduler();
-
-    saveSampleRSP(getRSP());
 
     char *argv[] = {"SampleCode"};
     enqueueProcess(sampleCodeModuleAddress, 1, 1, argv, NULL);

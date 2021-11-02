@@ -15,7 +15,7 @@ void haltcpu();
 #define MAX_PRIORITY 40
 #define MIN_PRIORITY 0
 #define DEF_PRIORITY 0
-#define PROCESS_DATA_MAX_SIZE 100
+#define PROCESS_DATA_MAX_SIZE 300
 #define MAX_ATTR_SIZE 6
 #define MAX_NAME_SIZE 10
 #define IDLE_PID 1

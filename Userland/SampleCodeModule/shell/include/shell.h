@@ -30,6 +30,7 @@
 #include "test_sync.h"
 #include "test_processes.h"
 #include "test_mm.h"
+#include "mem.h"
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0

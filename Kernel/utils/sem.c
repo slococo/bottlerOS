@@ -16,6 +16,7 @@ node_t * searchSem(char * name, node_t ** prev) {
     while (aux != NULL) {
         if (!strcmp(name, aux->sem->name))
             break;
+        aux = aux->next;
     }
     return aux;
 }

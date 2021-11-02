@@ -1,19 +1,7 @@
 #ifdef BUDDY
 
 // Basado en: https://github.com/cloudwu/buddy/blob/master/buddy.c
-
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#define NODE_UNUSED 0
-#define NODE_USED 1	
-#define NODE_SPLIT 2
-#define NODE_FULL 3
-
-#define LEVEL 20
-
-#define SIZE (1<<LEVEL)
+#include "memManagerBuddy.h"
 
 struct buddy{
 	int level;
@@ -25,12 +13,13 @@ static struct buddy self;
 void * buddy_alloc(int);
 int buddy_free(void *);
 
-void * pvPortMalloc(int size){
+void * pvPortMalloc(size_t size){
 	return buddy_alloc(size);
 }
 
-int vPortFree(void * pointer){
-	return buddy_free(pointer);
+void vPortFree(void * pointer){
+	buddy_free(pointer);
+	// return;
 }
 
 static int heapAddress = 0;
@@ -53,7 +42,7 @@ uint32_t next_pow_of_2(uint32_t x) {
 	x |= x>>4;
 	x |= x>>8;
 	x |= x>>16;
-	return x+1;
+	return x + 1;
 }
 
 #define PAGE_SIZE 0x1000
@@ -63,10 +52,9 @@ int _index_offset(int index, int level, int max_level) {
 }
 
 void _mark_parent(int index) {
-
 	while(1) {
 		int buddy = index - 1 + (index & 1) * 2;
-		if (buddy > 0 && (self.tree[buddy] == NODE_USED ||	self.tree[buddy] == NODE_FULL)) {
+		if (buddy > 0 && (self.tree[buddy] == NODE_USED || self.tree[buddy] == NODE_FULL)) {
 			index = (index + 1) / 2 - 1;
 			self.tree[index] = NODE_FULL;
 		} else {
@@ -77,13 +65,13 @@ void _mark_parent(int index) {
 
 void * buddy_alloc(int s) {
 
-	if(s%PAGE_SIZE != 0){
-		s=(s/PAGE_SIZE)+1;
-	}else{
-		s/=PAGE_SIZE;
+	if (s % PAGE_SIZE != 0){
+		s = (s / PAGE_SIZE) + 1;
+	} else{
+		s /= PAGE_SIZE;
 	}
 	int size;
-	if (s==0) {
+	if (s == 0) {
 		size = 1;
 	} else {
 		size = (int)next_pow_of_2(s);
@@ -111,8 +99,8 @@ void * buddy_alloc(int s) {
 				case NODE_FULL: break;
 				case NODE_UNUSED:
 					self.tree[index] = NODE_SPLIT;
-					self.tree[index*2+1] = NODE_UNUSED;
-					self.tree[index*2+2] = NODE_UNUSED;
+					self.tree[index * 2 + 1] = NODE_UNUSED;
+					self.tree[index * 2 + 2] = NODE_UNUSED;
 				default:
 					index = index * 2 + 1;
 					length /= 2;
@@ -120,7 +108,7 @@ void * buddy_alloc(int s) {
 					nextStep = 0;
 			}
 		}
-		if( nextStep ){
+		if (nextStep) {
 			if (index & 1) {
 				++index;
 			} else {
@@ -128,7 +116,7 @@ void * buddy_alloc(int s) {
 				while(cont) {
 					level--;
 					length *= 2;
-					index = (index+1)/2 -1;
+					index = (index + 1) / 2 - 1;
 					if (index < 0)
 						return NULL;
 					if (index & 1) {
@@ -137,10 +125,8 @@ void * buddy_alloc(int s) {
 					}
 				}
 			}
-
 		}
 	}
-
 	return NULL;
 }
 
@@ -195,37 +181,81 @@ int buddy_free(void * pointer) {
 	}
 }
 
-static void dumpMM(struct buddy * self, int index , int level) {
-    char buffer[100];
+// char *dumpMM() {
+// 	return NULL;
+// }
+uint64_t getSize(int level, int max_level) {
+	return (1 << (max_level - level)) * PAGE_SIZE;
+}
+
+/*
+void buddy_dumpMM(struct buddy * self, int index , int level) {
+    char buffer[10];
 	switch (self->tree[index]) {
 	case NODE_UNUSED:
-		printStringLen("(%d:%d)", _index_offset(index, level, self->level) , 1 << (self->level - level));
+		printStringLen(15, "(_", 1);
+		printStringLen(15, itoa(getSize(level, self->level), buffer, 10), 0);
+		printStringLen(15, ":", 1);
+        printStringLen(15, itoa(level, buffer, 10), 10);
+		printStringLen(15, "_)", 1);
 		break;
 	case NODE_USED:
-		printStringLen("(", 1);
-		printStringLen(itoa(_index_offset(index, level, self->level), buffer, 10));
-		printStringLen(":", 1);
-        printStringLen(itoa(1 << (self->level - level), buffer, 10));
-		printStringLen(")", 1);
+		printStringLen(15, "(*", 1);
+		printStringLen(15, itoa(getSize(level, self->level), buffer, 10), 10);
+		printStringLen(15, ":", 1);
+        printStringLen(15, itoa(level, buffer, 10), 10);
+		printStringLen(15, "*)", 1);
 		break;
 	case NODE_FULL:
-		printStringLen("{", 1);
-		_dump(self, index * 2 + 1, level+1);
-		_dump(self, index * 2 + 2, level+1);
-		printStringLen("}", 1);
+		printStringLen(15, "[", 1);
+		buddy_dumpMM(self, index * 2 + 1, level + 1);
+		buddy_dumpMM(self, index * 2 + 2, level + 1);
+		printStringLen(15, "]", 1);
 		break;
 	default:
-		printStringLen("(", 1);
-		_dump(self, index * 2 + 1, level+1);
-		_dump(self, index * 2 + 2, level+1);
-		printStringLen(")", 1);
+		printStringLen(15, "(", 1);
+		buddy_dumpMM(self, index * 2 + 1, level + 1);
+		buddy_dumpMM(self, index * 2 + 2, level + 1);
+		printStringLen(15, ")", 1);
+		break;
+	}
+}
+*/
+
+#include <stddef.h>
+void buddy_dumpMM(int index , int level, uint64_t *size, uint64_t *used) {
+    char buffer[10];
+	switch (self.tree[index]) {
+	case NODE_UNUSED:
+		*size += getSize(level, self.level);
+		break;
+	case NODE_USED:
+		*size += getSize(level, self.level);
+		*used += getSize(level, self.level);
+		break;
+	case NODE_FULL:
+		buddy_dumpMM(index * 2 + 1, level+1, size, used);
+		buddy_dumpMM(index * 2 + 2, level+1, size, used);
+		break;
+	default:
+		buddy_dumpMM(index * 2 + 1, level+1, size, used);
+		buddy_dumpMM(index * 2 + 2, level+1, size, used);
 		break;
 	}
 }
 
-void buddy_dumpMM(struct buddy * self) {
-	dumpMM(self, 0 , 0);
-	printStringLen("\n", 1);
+char * dumpMM() {
+	uint64_t size = 0, used = 0;
+	buddy_dumpMM(0, 0, &size, &used);
+	char *ans = pvPortMalloc(DUMP_MAX_SIZE);
+    char *ret = ans;
+	char buffer[20] = {0};
+    ans += strcpy(ans, "Free memory: ");
+    ans += strcpy(ans, itoa(size - used, buffer, 10, 20));
+    ans += strcpy(ans, "\nTotal memory: ");
+    ans += strcpy(ans, itoa(size, buffer, 10, 20));
+	
+	return ret;
 }
 
 #endif

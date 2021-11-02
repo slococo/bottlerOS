@@ -14,7 +14,7 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             exitProcess();
             break;
         case 5:
-            break;
+            return dumpMM();
         case 6:
             return (uint64_t) processes();
         case 7:

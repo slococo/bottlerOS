@@ -20,7 +20,6 @@ EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN systemCallsDispatcher
 EXTERN changeWindow
-EXTERN updateRSP
 EXTERN nextProcess
 
 GLOBAL switchContext
@@ -184,9 +183,6 @@ _irq00Handler:
 
 	call checkSleeping
 
-	; mov rdi, rsp
-	; call updateRSP
-
 	mov rdi, 0
 	call irqDispatcher
 
@@ -275,8 +271,6 @@ _initialize_stack_frame:
 ; System calls (int 80h)
 _systemCallsHandler:
 	pushStateNoRax
-	; fsave [bytesForFPU]
-	; fxsave [bytesForSSEAligned]
 
 	mov [auxRSI], rsi
 	mov rsi, rsp
@@ -290,9 +284,6 @@ _systemCallsHandler:
 	mov rsi, [auxRSI]
 
 	call systemCallsDispatcher
-
-	; fxrstor [bytesForSSEAligned]
-	; frstor [bytesForFPU]
 
 	pop rsp
 	mov [auxRAX], rax

@@ -28,8 +28,6 @@ void test_processes(int argc, char ** argv){
 
   int i = 0;
   while (1) {
-
-    debugPSA();
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
         char *argv[] = {"endless"};
@@ -89,15 +87,6 @@ void test_processes(int argc, char ** argv){
       printString(itoa(i, buffer, 10));
       newline();
     }
-    // char buffer[6] = {0};
-    //   winClear();
-    // char buffer[4];
-    // printString(itoa(i, buffer, 10));
-    // printStringLen(" procesos creados\n", 19);
-    
-    // char * output = sys_ps();
-    // printString(output);
-    // newline();
   }
   sys_exit();
 }

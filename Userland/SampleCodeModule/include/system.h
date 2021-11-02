@@ -35,5 +35,6 @@ char sys_block(int pid);
 char sys_unblock(int pid);
 void sys_quitCPU();
 void sys_wait();
+char * sys_dumpMM();
 
 #endif

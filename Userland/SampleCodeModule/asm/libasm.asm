@@ -5,7 +5,7 @@ GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
 GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_semClose
 GLOBAL sys_nice, sys_semWait, sys_semPost, sys_semOpen, sys_sleep, sys_kill, sys_getPid,
-GLOBAL sys_block, sys_unblock, sys_wait, sys_pipes, sys_quitCPU
+GLOBAL sys_block, sys_unblock, sys_wait, sys_pipes, sys_quitCPU, sys_dumpMM
 
 section .text
 
@@ -234,6 +234,21 @@ sys_quitCPU:
 	push rdi
 
 	mov rdi, 23
+	int 80h
+
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_dumpMM:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+
+	mov rdi, 5
 	int 80h
 
 	pop rdi

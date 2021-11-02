@@ -7,14 +7,14 @@ cmd_t commands[] = {
         {"block",       block,       1, 1},
         {"unblock",     unblock,     1, 1},
         {"inforeg",     inforeg,     0, 1},
-        {"excdiv",      excdiv,      1, 1},
-        {"excop",       excop,       1, 1},
+        {"excdiv",      excdiv,      0, 1},
+        {"excop",       excop,       0, 1},
         {"filter",      filter,      0, 1},
         {"clear",       clear,       1, 1},
         {"cpufeatures", cpufeatures, 0, 1},
         {"nice",        nice,        0, 1},
         {"ps",          ps,          0, 1},
-        {"pipe",        pipe,        0, 1},
+        {"pipes",       pipe,        0, 1},
         {"kill",        kill,        1, 1},
         {"sem",         sem,         0, 1},
         {"quadratic",   quadratic,   0, 1},
@@ -22,6 +22,7 @@ cmd_t commands[] = {
         {"phylo",       phylo,       0, 1},
         {"wc",          wc,          0, 1},
         {"loop",        loop,        0, 1},
+        {"mem",         mem,         0, 1},
         {"test_mm",          test_mm,           0, 1},
         {"test_prio",        test_prio,         0, 1},
         {"test_processes",   test_processes,    0, 1},
@@ -130,7 +131,7 @@ void processInput(char *input) {
     if (comm_flag0 && (comm_flag1 || pipe == -1)) {
         if (pipe != -1) {
             sys_loadProcess(commands[comm0].func, commands[comm0].isForeground, pipe, argv0, fd1);
-            sys_loadProcess(commands[comm1].func, commands[comm0].isForeground, end - pipe - 1, argv1, fd2);
+            sys_loadProcess(commands[comm1].func, 0, end - pipe - 1, argv1, fd2);
         } else {
             if (commands[comm0].isBuiltIn)
                 commands[comm0].func(end, argv0);
@@ -141,8 +142,12 @@ void processInput(char *input) {
             }
         }
 
-        if (commands[comm0].isForeground)
+        if (commands[comm0].isForeground) {
             sys_wait();
+            sys_free(argv0);
+            if (pipe == -1)
+                sys_free(argv1);
+        }
     }
 
     if (!comm_flag0) {

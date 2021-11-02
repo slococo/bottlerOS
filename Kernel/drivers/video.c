@@ -56,6 +56,8 @@ int printStringLen(int color, const char *string, int maxLen) {
         } else if (*string == '\b') {
             backspace();
             return i;
+        } else if (*string == -1) {
+            return i;
         } else if (checkIfEscapeSequence(string)) {
             return i;
         }

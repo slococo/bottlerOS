@@ -1,8 +1,5 @@
 #include "exceptions.h"
 
-static void * const sampleCodeAddress = (void *) 0x400000;
-typedef int (* fn)();
-
 static void zero_division();
 static void invalid_opcode();
 
@@ -54,29 +51,15 @@ void printRegs() {
 	printStringLen(15, "OLD RSP: ", 10);
 	printStringLen(15, itoa(*rspValueA, buffer, 16, 20), 20);
 	new_line();
-
-    *ripValueA = (uint64_t) sampleCodeAddress;
-    *rspValueA = (uint64_t) getSampleRSP();
 }
 
-void exitProcess();
 static void startOver() {
+	long initialTime = getTimeOfDay();
+	while (getTimeOfDay() < initialTime + WAITSECONDS);
 	clear();
+
 	exitProcess();
-
-	// TODO : hacer wait con getTimegen
-	
-	// unsigned char key = 0;
-	// while (key != '\n') {
-	// 	_sti();
-	// 	haltcpu();
-	// 	key = getKeyFromBuffer();
-	// }
-
-	// clear();
-	// cleanProcesses();
-	// moveToWindowVideo(1);
-	//((fn)sampleCodeAddress)();
+	forceTimer();
 }
 
 static void genericException(char * string, int len) {
@@ -87,9 +70,9 @@ static void genericException(char * string, int len) {
 }
 
 static void zero_division() {
-    genericException("Exception 0: Zero division. Press enter to reboot", 50);
+    genericException("Exception 0: Zero division. Please wait 5 seconds", 50);
 }
 
 static void invalid_opcode() {
-	genericException("Exception 1: Invalid opcode. Press enter to reboot", 51);
+	genericException("Exception 1: Invalid opcode. Please wait 5 seconds", 51);
 }
