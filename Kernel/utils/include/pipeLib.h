@@ -25,5 +25,6 @@ char openPipe(int * fds, char * name);
 void writePipe(int fd, char c);
 char readPipe(int fd);
 char * pipes();
+void closePipe(int fd);
 
 #endif

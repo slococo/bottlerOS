@@ -21,5 +21,7 @@ void sleep(int secs);
 char blockIO();
 void unblockIO();
 char getState(int pid);
+char isForeground();
+void wait();
 
 #endif

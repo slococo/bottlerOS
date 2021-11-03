@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "test_sync.h"
 
 #define TOTAL_PAIR_PROCESSES 2
@@ -25,11 +27,10 @@ void inc(int argc, char ** argv) {
   uint64_t N = atoi(argv[3], 10);
   uint64_t i;
 
-  char buff[10] = {0};
   for (i = 0; i < N; i++){
-    if (semDir) sys_semWait(semDir);
+    if (semDir) sys_semWait((sem_t *) semDir);
     slowInc(&global, value);
-    if (semDir) sys_semPost(semDir);
+    if (semDir) sys_semPost((sem_t *) semDir);
   }
 
   char buffer[10] = {0};
@@ -48,7 +49,7 @@ void test_sync(int argc, char ** argv){
 
   sem_t * sem = sys_semOpen(SEM_ID, 1);
   char semDir[10] = {0};
-  itoa((int) sem, semDir, 10);
+  itoa((uint64_t) sem, semDir, 10);
 
   for(i = 0; i < TOTAL_PAIR_PROCESSES; i++){
     char * argv1[] = {"inc", semDir, "1", ITERS};

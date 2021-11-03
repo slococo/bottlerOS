@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "systemCallsDispatcher.h"
 
 uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9) {
@@ -14,7 +16,7 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             exitProcess();
             break;
         case 5:
-            return dumpMM();
+            return (uint64_t) dumpMM();
         case 6:
             return (uint64_t) processes();
         case 7:
@@ -51,11 +53,15 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
         case 20:
             return unblock(rsi);
         case 21:
-            return wait();
+            wait();
+            break;
         case 22:
-            return pipes();
+            return (uint64_t) pipes();
         case 23:
             return quitCPU();
+        case 24:
+            closePipe(rsi);
+            break;
         default:
             return -1;
     }

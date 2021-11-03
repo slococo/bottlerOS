@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "shell.h"
 
 cmd_t commands[] = {
@@ -144,9 +146,11 @@ void processInput(char *input) {
 
         if (commands[comm0].isForeground) {
             sys_wait();
-            sys_free(argv0);
-            if (pipe == -1)
-                sys_free(argv1);
+        }
+        sys_free(argv0);
+        if (pipe != -1) {
+            sys_free(argv1);
+            sys_closePipe(fd1[1]);
         }
     }
 

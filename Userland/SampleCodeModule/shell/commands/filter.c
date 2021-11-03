@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "filter.h"
 
 #define SIZE 1000
@@ -28,6 +30,8 @@ void filter(int argc, char ** argv) {
             line = i;
         }
     }
+    buffer[i++] = c;
+    j++;
 
     printStringLen(buffer + line, j);
 

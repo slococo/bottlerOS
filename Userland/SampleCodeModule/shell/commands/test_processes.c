@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "test_processes.h"
 #include "ps.h"
 
@@ -14,10 +16,6 @@ typedef struct P_rq{
 void endless_loop(){
   while(1);
   sys_exit();
-}
-
-void debugPSA() {
-  return;
 }
 
 void test_processes(int argc, char ** argv){

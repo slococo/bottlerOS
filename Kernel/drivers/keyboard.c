@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "keyboard.h"
 
 #define SIZE 1
@@ -37,7 +39,8 @@ void testKeyboardInterrupt(unsigned char c) {
     if (flagChangeAlt == 0 && flagChangeF1 == 0) {
         flagChangeAlt = 1;
         flagChangeF1 = 1;
-        saveChar('\v');
+        // saveChar('\v');
+        saveChar(-1);
         return;
     } else if (c == 0xB8) {
         flagChangeAlt = 1;

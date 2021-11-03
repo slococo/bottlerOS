@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #ifdef BUDDY
 
 // Basado en: https://github.com/cloudwu/buddy/blob/master/buddy.c
@@ -83,10 +85,9 @@ void * buddy_alloc(int s) {
 
 	int index = 0;
 	int level = 0;
-	int nextStep = 1;
 
 	while (index >= 0) {
-		nextStep = 1;
+		int nextStep = 1;
 		if (size == length) {
 			if (self.tree[index] == NODE_UNUSED) {
 				self.tree[index] = NODE_USED;
@@ -181,50 +182,12 @@ int buddy_free(void * pointer) {
 	}
 }
 
-// char *dumpMM() {
-// 	return NULL;
-// }
 uint64_t getSize(int level, int max_level) {
 	return (1 << (max_level - level)) * PAGE_SIZE;
 }
 
-/*
-void buddy_dumpMM(struct buddy * self, int index , int level) {
-    char buffer[10];
-	switch (self->tree[index]) {
-	case NODE_UNUSED:
-		printStringLen(15, "(_", 1);
-		printStringLen(15, itoa(getSize(level, self->level), buffer, 10), 0);
-		printStringLen(15, ":", 1);
-        printStringLen(15, itoa(level, buffer, 10), 10);
-		printStringLen(15, "_)", 1);
-		break;
-	case NODE_USED:
-		printStringLen(15, "(*", 1);
-		printStringLen(15, itoa(getSize(level, self->level), buffer, 10), 10);
-		printStringLen(15, ":", 1);
-        printStringLen(15, itoa(level, buffer, 10), 10);
-		printStringLen(15, "*)", 1);
-		break;
-	case NODE_FULL:
-		printStringLen(15, "[", 1);
-		buddy_dumpMM(self, index * 2 + 1, level + 1);
-		buddy_dumpMM(self, index * 2 + 2, level + 1);
-		printStringLen(15, "]", 1);
-		break;
-	default:
-		printStringLen(15, "(", 1);
-		buddy_dumpMM(self, index * 2 + 1, level + 1);
-		buddy_dumpMM(self, index * 2 + 2, level + 1);
-		printStringLen(15, ")", 1);
-		break;
-	}
-}
-*/
-
 #include <stddef.h>
 void buddy_dumpMM(int index , int level, uint64_t *size, uint64_t *used) {
-    char buffer[10];
 	switch (self.tree[index]) {
 	case NODE_UNUSED:
 		*size += getSize(level, self.level);

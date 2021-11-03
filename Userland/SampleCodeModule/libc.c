@@ -154,7 +154,7 @@ char *itoa(int value, char *buffer, int base) {
 }
 
 int atoi(char *str, int length) {
-    int i = 0, sign = 1, val = 0, nbr = 0;
+    int i = 0, sign = 1, val = 0;
     while (str[i] != '\0') {
         if (str[i] == '-') {
             sign = -sign;
@@ -164,7 +164,7 @@ int atoi(char *str, int length) {
     }
     i = 0;
     while (str[i] >= '0' && str[i] <= '9' && str[i] != '\0') {
-        nbr = (int) (str[i] - '0');
+        int nbr = (int) (str[i] - '0');
         val = (val * 10) + nbr;
         i++;
     }

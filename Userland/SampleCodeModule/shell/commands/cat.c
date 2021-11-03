@@ -1,6 +1,12 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "cat.h"
 
 #define SIZE 1000
+
+void debug2() {
+    return;
+}
 
 void cat(int argc, char ** argv) {
     char c;
@@ -8,7 +14,7 @@ void cat(int argc, char ** argv) {
     char buffer[SIZE] = {0};
 
     while ((c = getChar()) > 0) {
-        if (i >= SIZE)
+        if (i > SIZE - 1)
             break;
         buffer[i++] = c;
         j++;
@@ -22,6 +28,10 @@ void cat(int argc, char ** argv) {
             buffer[--i] = 0;
         }
     }
+    buffer[i++] = c;
+    j++;
+
+    debug2();
     printStringLen(buffer + line, j);
 
     newline();

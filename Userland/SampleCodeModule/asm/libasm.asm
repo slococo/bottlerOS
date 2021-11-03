@@ -3,7 +3,7 @@ GLOBAL _getMem, sys_loadProcess
 GLOBAL raiseOpcodeExc
 GLOBAL _getRegs, sys_switchContext
 GLOBAL cpu_id, cpu_id_support
-GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_semClose
+GLOBAL sys_exit, sys_ps, sys_free, sys_malloc, sys_sem, sys_openPipe, sys_closePipe, sys_semClose
 GLOBAL sys_nice, sys_semWait, sys_semPost, sys_semOpen, sys_sleep, sys_kill, sys_getPid,
 GLOBAL sys_block, sys_unblock, sys_wait, sys_pipes, sys_quitCPU, sys_dumpMM
 
@@ -71,6 +71,24 @@ sys_openPipe:
 	int 80h
 
 	pop rdx
+	pop rsi
+	pop rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+sys_closePipe:
+    push rbp
+    mov rbp, rsp
+
+	push rdi
+	push rsi
+
+	mov rsi, rdi
+	mov rdi, 24
+	int 80h
+
 	pop rsi
 	pop rdi
 

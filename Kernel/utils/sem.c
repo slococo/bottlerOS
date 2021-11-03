@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "sem.h"
 
 static uint32_t semLock;
@@ -40,6 +42,8 @@ sem_t *semOpen(char *name, unsigned int value) {
     sem->name = pvPortMalloc(MAX_NAME);
     strcpy(sem->name, name);
     sem->value = value;
+    sem->entering = NULL;
+    sem->last = NULL;
     counter++;
 
     leave_region(&semLock);

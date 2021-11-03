@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "phyloLib.h"
 
 philosopher_t *firstPhil;
@@ -120,7 +122,6 @@ void phylo(int argc, char ** argv) {
     philosopher_t * left = NULL;
     for (int i = 0; i < philoCount; i++) {
         philosopher_t * phil = sys_malloc(sizeof(philosopher_t));
-        phil->debug = i;
         phil->argv = sys_malloc(sizeof(char *) * 2);
         phil->buffer = sys_malloc(20);
         phil->state = THINKING;

@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #ifndef BUDDY
 
 #include "memManagerFRT4.h"
@@ -118,7 +120,6 @@ void *pvPortMalloc(size_t xWantedSize) {
 }
 
 /*-----------------------------------------------------------*/
-
 void vPortFree(void *pv) {
     uint8_t *puc = (uint8_t *) pv;
     BlockLink_t *pxLink;

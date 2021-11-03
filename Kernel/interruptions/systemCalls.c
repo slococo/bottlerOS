@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "systemCalls.h"
 
 uint64_t write(uint64_t fd, uint64_t buffer, uint64_t length) {
@@ -36,10 +38,9 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
                 blockIO();
             }
             readBytes++;
-            if (*bufferAux++ == '\v') {
+            if (*bufferAux++ == -1) {
                 break;
             }
-            // blockIO();
         }
     } else {
         while (length-- > 0) {
@@ -47,12 +48,11 @@ uint64_t read(uint64_t fd, uint64_t buffer, uint64_t length) {
             if (*bufferAux == 0)
                 break;
             readBytes++;
-            if (*bufferAux++ == '\v') {
+            if (*bufferAux++ == -1) {
                 break;
             }
         }
     }
-    // *bufferAux = 0;
 
     return readBytes;
 }

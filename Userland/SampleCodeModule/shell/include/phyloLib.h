@@ -17,7 +17,6 @@ int * state;
 typedef enum states {EATING = 0, HUNGRY, THINKING} states;
 
 typedef struct philosopher_t {
-    int debug;
     char ** argv;
     char * buffer;
     sem_t * sem;
@@ -29,5 +28,7 @@ typedef struct philosopher_t {
 } philosopher_t;
 
 void philosopher(int argc, char ** argv);
+void freePhilo(philosopher_t * phil);
+void end();
 
 #endif

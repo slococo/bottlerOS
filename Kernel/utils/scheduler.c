@@ -1,7 +1,9 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "scheduler.h"
 
 enum states {
-    READY = 0, DEAD, BLOCKED, BBCHILDREN, WAITING, BLOCKEDIO
+    READY = 0, DEAD, BLOCKED, WAITING, BLOCKEDIO
 };
 
 typedef struct processCDT {
@@ -18,6 +20,7 @@ typedef struct processCDT {
     int *fd;
     int children;
     char backWait;
+    uint64_t bPointer;
 } processCDT;
 
 typedef struct sleepCDT {
@@ -56,7 +59,6 @@ void removeProcess(processCDT *del, processCDT **first, processCDT **last) {
 uint64_t nextProcess(uint64_t currentRSP) {
     if (currentProcess != NULL)
         currentProcess->rsp = currentRSP;
-    processCDT *prev = currentProcess;
     if (currentProcess != NULL && currentProcess->state == READY &&
         currentProcess->executions == MAX_PRIORITY - currentProcess->priority) {
         currentProcess->executions = 0;
@@ -69,7 +71,6 @@ uint64_t nextProcess(uint64_t currentRSP) {
         } else if (currentProcess == firstBlockedIteration) {
             idleFlag = 1;
             unblock(IDLE_PID);
-            prev = currentProcess;
             currentProcess = currentProcess->next;
         } else if (currentProcess->state == DEAD) {
             processCDT *del = currentProcess;
@@ -80,7 +81,6 @@ uint64_t nextProcess(uint64_t currentRSP) {
                    currentProcess->state == BLOCKEDIO) {
             if (firstBlockedIteration == NULL)
                 firstBlockedIteration = currentProcess;
-            prev = currentProcess;
             currentProcess = currentProcess->next;
         }
     }
@@ -149,6 +149,7 @@ int enqueueProcess(void (*fn)(int, char **), char foreground, int argc, char *ar
     process->next = NULL;
     process->children = 0;
     process->backWait = 0;
+    process->bPointer = (uint64_t) auxi;
 
     process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
 
@@ -341,8 +342,8 @@ char kill(int pid) {
 
     vPortFree(del->fd);
     vPortFree(del->name);
-    void *auxi = del->rbp - STACK_SIZE;
-    vPortFree((void *) auxi);
+    // vPortFree((void *) ((uint64_t) del->rbp - STACK_SIZE));
+    vPortFree((void *) del->bPointer);
     del->state = DEAD;
 
     if (pid == currentProcess->pid) {
