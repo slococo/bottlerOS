@@ -26,6 +26,8 @@ void test_processes(int argc, char ** argv){
 
   int i = 0;
   while (1) {
+    sys_quitCPU();
+    
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
         char *argv[] = {"endless"};
