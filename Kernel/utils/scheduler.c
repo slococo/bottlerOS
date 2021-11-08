@@ -2,6 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "scheduler.h"
 
+#define MAX_MALLOCS 40
+
 enum states {
     READY = 0, DEAD, BLOCKED, WAITING, BLOCKEDIO
 };
@@ -21,6 +23,8 @@ typedef struct processCDT {
     int children;
     char backWait;
     uint64_t bPointer;
+    void ** mmRegs;
+    int mmRegsQty;
 } processCDT;
 
 typedef struct sleepCDT {
@@ -150,6 +154,9 @@ int enqueueProcess(void (*fn)(int, char **), char foreground, int argc, char *ar
     process->children = 0;
     process->backWait = 0;
     process->bPointer = (uint64_t) auxi;
+    void * mmRegs[MAX_MALLOCS];
+    process->mmRegs = mmRegs;
+    process->mmRegsQty = 0;
 
     process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
 
@@ -342,6 +349,10 @@ char kill(int pid) {
 
     vPortFree(del->fd);
     vPortFree(del->name);
+    for (int i = 0; i < del->mmRegsQty; i++) {
+        vPortFree(del->mmRegs[i]);
+    }
+
     // vPortFree((void *) ((uint64_t) del->rbp - STACK_SIZE));
     vPortFree((void *) del->bPointer);
     del->state = DEAD;
@@ -351,6 +362,34 @@ char kill(int pid) {
     }
 
     return EXIT_SUCCESS;
+}
+
+void processMallocs(void *ptr) {
+    if (currentProcess == NULL)
+        return;
+    
+    currentProcess->mmRegs[currentProcess->mmRegsQty++] = ptr;
+}
+
+void processFrees(void *ptr) {
+    if (currentProcess == NULL)
+        return;
+    
+    char flag = 0;
+    for (int i = 0; i < currentProcess->mmRegsQty; i++) {
+        if (currentProcess->mmRegs[i] == ptr) {
+            flag = 1;
+        }
+        if (flag) {
+            if (i != currentProcess->mmRegsQty - 1) {
+                currentProcess->mmRegs[i] = currentProcess->mmRegs[i + 1];
+            }
+            else currentProcess->mmRegs[i] = NULL;
+        }
+        
+    }
+    if (flag)
+        currentProcess->mmRegsQty--;
 }
 
 int getFdOut() {

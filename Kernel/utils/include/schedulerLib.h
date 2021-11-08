@@ -23,5 +23,7 @@ void unblockIO();
 char getState(int pid);
 char isForeground();
 void wait();
+void processFrees(void *ptr);
+void processMallocs(void *ptr);
 
 #endif
