@@ -12,7 +12,7 @@ void backspace();
 char getChar();
 void putChar(char c);
 int abs();
-int atoi(char * buffer, int len);
+int atoi(char * buffer);
 int strlen(const char * s);
 void scanf(char * buffer, int maxLen);
 int strcmp(const char * s1, const char * s2);

@@ -22,7 +22,7 @@ void help(int argc, char *argv[]) {
         sys_exit();
     }
 
-    int page = atoi(argv[1], 10);
+    int page = atoi(argv[1]);
     int pages = getCurrentPages();
 
     if (page < 1 || page > pages) {

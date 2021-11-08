@@ -7,7 +7,7 @@ void unblock(int argc, char ** argv) {
         printStringLen("unblock receives a pid\n", 21);
         sys_exit();
     }
-    int pid = atoi(argv[1], MAX_LEN);
+    int pid = atoi(argv[1]);
 
     sys_unblock(pid);
     sys_exit();

@@ -7,8 +7,8 @@ void nice(int argc, char ** argv) {
         printStringLen("nice receives a pid and an offset\n", 35);
         sys_exit();
     }
-    int pid = atoi(argv[1], MAX_LEN);
-    char offset = (char) atoi(argv[2], MAX_LEN);
+    int pid = atoi(argv[1]);
+    char offset = (char) atoi(argv[2]);
 
     sys_nice(pid, offset);
     sys_exit();

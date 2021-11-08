@@ -8,7 +8,7 @@ void kill(int argc, char ** argv) {
         // sys_exit();
         return;
     }
-    int pid = atoi(argv[1], MAX_LEN);
+    int pid = atoi(argv[1]);
 
     sys_kill(pid);
     // sys_exit();

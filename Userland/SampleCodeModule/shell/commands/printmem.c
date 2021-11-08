@@ -24,7 +24,7 @@ void printmem(int argc, char *argv[]) {
 
 	int buffer[8];
 	
-	getMem(buffer, atoi(argv[1], strlen(argv[1])));
+	getMem(buffer, atoi(argv[1]));
 	
 	for (int i = 0; i < 8; i++) {
 		char bufferAux[8];

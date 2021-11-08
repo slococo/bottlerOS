@@ -22,9 +22,9 @@ void inc(int argc, char ** argv) {
     return;
   }
 
-  uint64_t semDir = (uint64_t) atoi(argv[1], 14);
-  int64_t value = atoi(argv[2], 10);
-  uint64_t N = atoi(argv[3], 10);
+  uint64_t semDir = (uint64_t) atoi(argv[1]);
+  int64_t value = atoi(argv[2]);
+  uint64_t N = atoi(argv[3]);
   uint64_t i;
 
   for (i = 0; i < N; i++){

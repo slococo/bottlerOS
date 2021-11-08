@@ -33,6 +33,7 @@ void addPhilo() {
     new->buffer = sys_malloc(sizeof(char) * BUFF_SIZE);
     new->state = THINKING;
     char * aux = sys_malloc(sizeof(char) * 20);
+    aux[0] = '\0';
     aux = strcat(aux, "filosofo");
     char buffer[2] = {0};
     aux = strcat(aux, itoa(philoCount, buffer, 10));
@@ -93,7 +94,7 @@ void philosopher(int argc, char ** argv) {
         sys_exit();
     }
     
-    philosopher_t * i = (philosopher_t *) ((uint64_t) atoi(argv[1], -1));
+    philosopher_t * i = (philosopher_t *) ((uint64_t) atoi(argv[1]));
 
     while (1) {
         sys_sleep(1);
@@ -113,7 +114,7 @@ void phylo(int argc, char ** argv) {
     if (argc == 1)
         philoCount = STARTING;
     else if (argc == 2) {
-        philoCount = atoi(argv[1], -1);
+        philoCount = atoi(argv[1]);
         if (philoCount < 1 || philoCount > MAX_PHILO_SIZE) {
             printStringLen("amount of philosofers must be between 1 and 10\n", 48);
             sys_exit();
@@ -130,6 +131,7 @@ void phylo(int argc, char ** argv) {
         phil->buffer = sys_malloc(20);
         phil->state = THINKING;
         char * aux = sys_malloc(sizeof(char) * 20);
+        aux[0] = '\0';
         aux = strcat(aux, "filosofo");
         char buffer[2] = {0};
         aux = strcat(aux, itoa(i, buffer, 10));
@@ -173,9 +175,6 @@ void phylo(int argc, char ** argv) {
         else if (c == 'q') {
             end();
         }
-        // else {
-        //     end();
-        // }
     }
     sys_exit();
 }

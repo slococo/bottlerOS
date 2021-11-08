@@ -153,7 +153,7 @@ char *itoa(int value, char *buffer, int base) {
     return reverse(buffer, 0, i - 1);
 }
 
-int atoi(char *str, int length) {
+int atoi(char *str) {
     int i = 0, sign = 1, val = 0;
     while (str[i] != '\0') {
         if (str[i] == '-') {
