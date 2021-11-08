@@ -197,7 +197,7 @@ char *getEntering(sem_t *sem) {
 }
 
 char *getSems() {
-    char *ans = pvPortMalloc(1 + counter * SEM_DATA_MAX_SIZE);
+    char *ans = pvPortMalloc(MIN_SIZE + counter * SEM_DATA_MAX_SIZE);
     char *ret = ans;
 
     char *info = "name       value   pidsWaiting\n";

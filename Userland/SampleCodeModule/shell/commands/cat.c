@@ -4,10 +4,6 @@
 
 #define SIZE 1000
 
-void debug2() {
-    return;
-}
-
 void cat(int argc, char ** argv) {
     char c;
     int i = 0, j = 0, line = 0;
@@ -31,7 +27,6 @@ void cat(int argc, char ** argv) {
     buffer[i++] = c;
     j++;
 
-    debug2();
     printStringLen(buffer + line, j);
 
     newline();

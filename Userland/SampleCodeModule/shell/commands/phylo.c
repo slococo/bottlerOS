@@ -32,7 +32,11 @@ void addPhilo() {
     new->argv = sys_malloc(sizeof(char *) * ARGV_SIZE);
     new->buffer = sys_malloc(sizeof(char) * BUFF_SIZE);
     new->state = THINKING;
-    new->sem = sys_semOpen("filosofo", 0);
+    char * aux = sys_malloc(sizeof(char) * 20);
+    aux = strcat(aux, "filosofo");
+    char buffer[2] = {0};
+    aux = strcat(aux, itoa(philoCount, buffer, 10));
+    new->sem = sys_semOpen(aux, 0);
 
     new->argv[0] = "filosofo";
     strcpy(new->buffer, itoa((uint64_t) new, new->buffer, 10));
@@ -125,7 +129,11 @@ void phylo(int argc, char ** argv) {
         phil->argv = sys_malloc(sizeof(char *) * 2);
         phil->buffer = sys_malloc(20);
         phil->state = THINKING;
-        phil->sem = sys_semOpen("filosofo", 0);
+        char * aux = sys_malloc(sizeof(char) * 20);
+        aux = strcat(aux, "filosofo");
+        char buffer[2] = {0};
+        aux = strcat(aux, itoa(i, buffer, 10));
+        phil->sem = sys_semOpen(aux, 0);
 
         phil->argv[0] = "filosofo";
         strcpy(phil->buffer, itoa((uint64_t) phil, phil->buffer, 10));
@@ -165,7 +173,9 @@ void phylo(int argc, char ** argv) {
         else if (c == 'q') {
             end();
         }
-        // sys_sleep(1);
+        // else {
+        //     end();
+        // }
     }
     sys_exit();
 }
