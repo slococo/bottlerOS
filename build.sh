@@ -14,8 +14,10 @@ if [ $# -eq 1 ]; then
 	    make buddy
     elif [ $1 = "spanish" ]; then
         make spanish
+    elif [ $1 = "free" ]; then
+        make free
     else
-	    echo "Do you want to compile with the buddy memory manager? if so, you must pass buddy as argument"
+	    echo "Do you want to compile with the buddy memory manager? If so, you must pass buddy as argument"
     fi
 elif [ $# -eq 0 ]; then
     make all

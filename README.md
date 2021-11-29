@@ -19,13 +19,13 @@ Si tiene otra distribución consulte cómo hacerlo.
 
 ## Compilación <a name="compilación"></a>
 
-Para compilar todos los archivos se debe ejecutar el script `build.sh` (desde la carpeta raíz del proyecto). Note que usted podrá pasarle como argumento `buddy` si desea compilar con este memory manager (por defecto no compilará con este). Además, si quiere probar el OS con el teclado en español lo podrá hacer pasandole como argumento `spanish`.
+Para compilar todos los archivos se debe ejecutar el script `build.sh` (desde la carpeta raíz del proyecto). Note que usted podrá pasarle como argumento `buddy` si desea compilar con este memory manager (por defecto no compilará con este). Además, si quiere probar el OS con el teclado en español lo podrá hacer pasandole como argumento `spanish`. Por último, el parámetro `free` liberará la memoria (que haya sido obtenida mediante `malloc`) al terminar o hacer `kill` de un proceso.   
 
 ```bash
 ./build.sh
 ```
 
-Este script hará un make en la carpeta de `Toolchain` y luego un make en la carpeta `root` del proyecto. Luego, dependiendo del parámetro ingresado hará: `make all`, `spanish`, `buddy`.
+Este script hará un `make` en la carpeta de `Toolchain` y luego un `make` en la carpeta `root` del proyecto. Luego, dependiendo del parámetro ingresado hará: `make all`, `make spanish`, `make buddy` o `make free`.
 
 ## Ejecución <a name="ejecución"></a>
 
