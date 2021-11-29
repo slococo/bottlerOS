@@ -186,7 +186,6 @@ uint64_t getSize(int level, int max_level) {
 	return (1 << (max_level - level)) * PAGE_SIZE;
 }
 
-#include <stddef.h>
 void buddy_dumpMM(int index , int level, uint64_t *size, uint64_t *used) {
 	switch (self.tree[index]) {
 	case NODE_UNUSED:

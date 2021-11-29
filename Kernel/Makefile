@@ -17,7 +17,7 @@ OBJECTS_INTERRUPTIONS=$(SOURCES_INTERRUPTIONS:.c=.o)
 OBJECTS_INTERRUPTIONS_ASM=$(SOURCES_INTERRUPTIONS_ASM:.asm=.o)
 OBJECTS_ASM=$(SOURCES_ASM:.asm=.o)
 LOADERSRC=loader.asm
-FLAGS=../flags.txt
+FLAGS=flags.txt
 
 LOADEROBJECT=$(LOADERSRC:.asm=.o)
 STATICLIBS=
@@ -33,7 +33,7 @@ $(KERNEL_ELF): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T kernel.ld --oformat=elf64-x86-64 -o $@ $^
 
 %.o: %.c $(FLAGS)
-	$(GCC) $(GCCFLAGS) -I./include -I./drivers/include -I./interruptions/include -I./utils/include -I./tests/include $(MFLAG) $(KFLAG) -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I./drivers/include -I./interruptions/include -I./utils/include -I./tests/include $(MFLAG) $(KFLAG) $(FFLAG) -c $< -o $@
 
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@

@@ -4,6 +4,7 @@
 #include "memManager.h"
 #include <stddef.h>
 #include <stdint.h>
+#include "lib.h"
 
 #define NODE_UNUSED 0
 #define NODE_USED 1	

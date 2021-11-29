@@ -3,7 +3,6 @@
 #include "systemCallsDispatcher.h"
 
 uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9) {
-    void *aux;
 
     switch (rdi) {
         case 0:
@@ -23,12 +22,17 @@ uint64_t systemCallsDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_
             return (uint64_t) processes();
         case 7:
             return (uint64_t) getSems();
-        case 8:
-            aux = pvPortMalloc((size_t) rsi);
+        case 8: {
+            void *aux = pvPortMalloc((size_t) rsi);
+            #ifdef FREE_EXIT
             processMallocs(aux);
+            #endif
             return (uint64_t) aux;
+        }
         case 9:
+            #ifdef FREE_EXIT
             processFrees((void *) rsi);
+            #endif
             vPortFree((void *) rsi);
             break;
         case 10:

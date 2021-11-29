@@ -23,8 +23,10 @@ typedef struct processCDT {
     int children;
     char backWait;
     uint64_t bPointer;
+    #ifdef FREE_EXIT
     void ** mmRegs;
     int mmRegsQty;
+    #endif
 } processCDT;
 
 typedef struct sleepCDT {
@@ -154,9 +156,11 @@ int enqueueProcess(void (*fn)(int, char **), char foreground, int argc, char *ar
     process->children = 0;
     process->backWait = 0;
     process->bPointer = (uint64_t) auxi;
+    #ifdef FREE_EXIT
     void * mmRegs[MAX_MALLOCS];
     process->mmRegs = mmRegs;
     process->mmRegsQty = 0;
+    #endif
 
     process->rsp = _initialize_stack_frame(fn, rbp, argc, argv);
 
@@ -349,9 +353,11 @@ char kill(int pid) {
 
     vPortFree(del->fd);
     vPortFree(del->name);
+    #ifdef FREE_EXIT
     for (int i = 0; i < del->mmRegsQty; i++) {
         vPortFree(del->mmRegs[i]);
     }
+    #endif
 
     // vPortFree((void *) ((uint64_t) del->rbp - STACK_SIZE));
     vPortFree((void *) del->bPointer);
@@ -364,8 +370,9 @@ char kill(int pid) {
     return EXIT_SUCCESS;
 }
 
+#ifdef FREE_EXIT
 void processMallocs(void *ptr) {
-    if (currentProcess == NULL)
+    if (currentProcess == NULL || currentProcess->mmRegsQty + 1 == MAX_MALLOCS)
         return;
     
     currentProcess->mmRegs[currentProcess->mmRegsQty++] = ptr;
@@ -377,13 +384,11 @@ void processFrees(void *ptr) {
     
     char flag = 0;
     for (int i = 0; i < currentProcess->mmRegsQty; i++) {
-        if (currentProcess->mmRegs[i] == ptr) {
+        if (currentProcess->mmRegs[i] == ptr)
             flag = 1;
-        }
         if (flag) {
-            if (i != currentProcess->mmRegsQty - 1) {
+            if (i != currentProcess->mmRegsQty - 1)
                 currentProcess->mmRegs[i] = currentProcess->mmRegs[i + 1];
-            }
             else currentProcess->mmRegs[i] = NULL;
         }
         
@@ -391,6 +396,7 @@ void processFrees(void *ptr) {
     if (flag)
         currentProcess->mmRegsQty--;
 }
+#endif
 
 int getFdOut() {
     if (currentProcess == NULL)
