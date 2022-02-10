@@ -2,7 +2,7 @@
 
 BottlerOS es un sistema operativo...
 
-## Table de contenidos
+## Tabla de contenidos
 * [Requisitos](#requisitos)
 * [Compilación](#compilación)
 * [Ejecución](#ejecución)
